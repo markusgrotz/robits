@@ -1,0 +1,36 @@
+{
+    "robot_name": "iiwa14",
+    "class_path": "robits.sim.robot.MujocoRobot",
+    "joint_names": [
+        "iiwa14/joint1",
+        "iiwa14/joint2",
+        "iiwa14/joint3",
+        "iiwa14/joint4",
+        "iiwa14/joint5",
+        "iiwa14/joint6",
+        "iiwa14/joint7"
+    ],
+    "actuator_names": [
+        "iiwa14/actuator1",
+        "iiwa14/actuator2",
+        "iiwa14/actuator3",
+        "iiwa14/actuator4",
+        "iiwa14/actuator5",
+        "iiwa14/actuator6",
+        "iiwa14/actuator7"
+    ],
+    "default_joint_positions": [
+        0.000,
+        0.785,
+        0.000,
+        -1.570,
+        0.000,
+        0.785,
+        1.570
+    ],
+    "gripper": "gripper_robotiq_sim",
+    "camera": "camera_front_sim",
+    "description_name": "iiwa14_mj_description",
+    "wrist_name": "link7",
+    "wrist_pos": "0.0 0.0 -0.01"
+}

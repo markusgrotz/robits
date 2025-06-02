@@ -1,0 +1,5 @@
+{
+    "gripper_name": "panda",
+    "ip_addr": "172.16.0.2",
+    "class_path": "robits.real.franka.gripper.FrankaGripper"
+}

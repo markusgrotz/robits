@@ -1,0 +1,4 @@
+{
+    "name": "openai",
+    "class_path": "robits.audio.speech.OpenAIAPI"
+}

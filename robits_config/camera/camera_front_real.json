@@ -1,0 +1,8 @@
+{
+    "camera_name": "front",
+    "width": 640,
+    "height": 480,
+    "hz": 30,
+    "serial_number": "215122255213",
+    "class_path": "robits.real.realsense_camera.RealsenseCamera"
+}

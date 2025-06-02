@@ -1,0 +1,109 @@
+[tool.poetry]
+name = "robits"
+version = "0.5.0"
+description = "Lightweight, modular, and scalable software stack for AI-driven robotic manipulation."
+authors = ["Markus Grotz <grotz@uw.edu>"]
+packages = [{include = "robits"}, {include = "robits_config"}]
+readme = "README.md"
+keywords = ["robotics", "AI", "manipulation", "research", "perception", "control", "simulation"]
+
+classifiers = [
+    "Development Status :: 4 - Beta", 
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Framework :: Robot Framework",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Environment :: Console",
+]
+
+[tool.poetry.urls]
+homepage = "https://github.com/markusgrotz/robits"
+repository = "https://github.com/markusgrotz/robits"
+documentation = "https://robits.readthedocs.io/en/latest/"
+tracker = "https://github.com/markusgrotz/robits/issues"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13" # open3d is not available yet for newer version
+numpy = ">=1.24"
+open3d = [
+  { version = "0.18.*", markers = "python_version < '3.10'" },
+  { version = ">=0.18", markers = "python_version >= '3.10'" }
+]
+matplotlib = "^3.7.5"
+scipy = "^1.13"
+
+ipython = ">=8.0"
+rich-click = "^1"
+click-prompt = ">=0.6.0"
+
+textual = "^1.0.0"
+textual-slider = "^0.1.2"
+
+# sim 
+mujoco = {version = "^3.3", extras = ["sim", "all"], optional = true}
+robot-descriptions = {version = "^1.14.0", extras = ["sim", "all"], optional = true}
+dm-control = {version = "^1.0.30", extras = ["sim", "all"], optional = true}
+
+# real
+
+# For Python versions less than 3.12
+pyrealsense2 = { version = "^2.55.1", markers = "python_version < '3.12' and platform_machine == 'x86_64'", optional = true }
+
+# For Python 3.12 and above, using the beta version
+pyrealsense2-beta = { version = "2.56.0.8430", markers = "python_version >= '3.12' and platform_machine == 'x86_64'", optional = true }
+#pyrobotiqgripper = {git = "https://github.com/markusgrotz/pyRobotiqGripper.git", extras = ["real", "all"], optional = true}
+franky-panda = { version = "*", markers = "platform_machine == 'x86_64'", extras = ["real", "all"], optional = true}
+urx = {version = "^0.11.0", extras = ["ur", "all"], optional = true}
+xarm-python-sdk = {version ="^1.15.3", extras = ["xarm", "all"], optional = true}
+
+# remote 
+zmq = {version = "^0.0.0", extras = ["remote", "all"], optional = true}
+pyzmq = {version = "^26.4.0", extras = ["remote", "all"], optional = true}
+psutil = {version = "^7.0.0", extras = ["remote", "all"], optional = true}
+
+# optional 
+openai = {version = "^1.64.0", extras = ["audio"], optional = true}
+openai-whisper = {version = "^20240930", extras = ["audio"], optional = true}
+sounddevice = {version = "^0.5.2", extras = ["audio"], optional = true}
+
+# usd - only compatible with Python < 3.11
+usd-core = {version = "^23.5.0", python = ">=3.8.1,<3.11", extras = ["usd", "all"], optional = true}
+
+# dev
+toml = {version = "^0.10.2", extras = ["dev"], optional = true}
+sphinx-rtd-theme = {version = "^3.0.2", extras = ["dev"], optional = true}
+sphinxcontrib-video = {version = "^0.4.1", extras = ["dev"], optional = true}
+myst-parser = {version = "3.0.1", extras = ["dev"], optional = true}
+sphinx = {version = "7.4.7", extras = ["dev"], optional = true}
+ruff = {version = "^0.11.11", extras = ["dev"], optional = true}
+black = {version = "^25.1.0",  extras = ["dev"], optional = true}
+
+
+[tool.poetry.extras]
+real = ["franky-panda", "pyrealsense2", "pyrealsense2-beta"] #"pyrobotiqgripper"
+sim = ["mujoco", "robot-descriptions", "dm-control"]
+usd = ["usd-core", "mujoco", "robot-descriptions", "dm-control"]
+all = ["franky-panda", "pyrealsense2", "pyrealsense2-beta", "mujoco", "robot-descriptions", "dm-control", "usd-core",  "zmq", "pyzmq", "psutil"] #"pyrobotiqgripper",
+dev = ["sphinx", "toml", "myst-parser", "sphinx-rtd-theme", "sphinxcontrib-video", "black", "ruff"]
+ur = ["urx"]
+xarm = ["xarm-python-sdk"]
+remote = ["zmq", "pyzmq", "psutil"]
+audio = ["openai", "openai-whisper", "sounddevice"]
+
+[build-system]
+requires = ["poetry-core>=1.0.8"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+rb = 'robits.cli.main:cli'
+panda = 'robits.cli.devices.panda_cli:panda'
+gripper = 'robits.cli.devices.gripper_cli:gripper'
+camera = 'robits.cli.devices.camera_cli:camera'
+sam2act-agent = 'robits.cli.agents.sam2act_cli:cli'

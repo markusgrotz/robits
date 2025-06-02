@@ -1,0 +1,5 @@
+{
+    "name": "espeek",
+    "class_path": "robits.audio.speech.CmdSpeech",
+    "backend": "espeak"
+}

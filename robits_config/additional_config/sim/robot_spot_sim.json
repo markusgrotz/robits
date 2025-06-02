@@ -1,0 +1,22 @@
+{
+    "robot_name": "spot",
+    "class_path": "robits.sim.robot.MujocoRobot",
+    "joint_names": [
+        "spot/fl_hx",
+        "spot/fl_hy",
+        "spot/fl_kn",
+        "spot/fr_hx",
+        "spot/fr_hy",
+        "spot/fr_kn",
+        "spot/hl_hx",
+        "spot/hl_hy",
+        "spot/hl_kn",
+        "spot/hr_hx",
+        "spot/hr_hy",
+        "spot/hr_kn"
+    ],
+    "camera": "camera_front_sim",
+    "description_name": "spot_mj_description",
+    "variant_name": "spot.xml",
+    "wrist_name": "bracelet_link"
+}

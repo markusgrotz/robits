@@ -1,0 +1,6 @@
+
+{
+    "class_path": "robits.remote.client.camera.CameraZMQClient",
+    "address": "localhost",
+    "camera_name": "remote"
+}

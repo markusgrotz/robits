@@ -1,0 +1,27 @@
+{
+    "robot_name": "panda",
+    "class_path": "robits.sim.robot.MujocoRobot",
+    "joint_names": [
+        "panda/joint1",
+        "panda/joint2",
+        "panda/joint3",
+        "panda/joint4",
+        "panda/joint5",
+        "panda/joint6",
+        "panda/joint7"
+    ],
+    "default_joint_positions": [
+        0,
+        -0.78,
+        0,
+        -2.35,
+        0,
+        1.57,
+        -0.78
+    ],
+    "gripper": "gripper_robotiq_sim",
+    "camera": "camera_front_sim",
+
+    "description_name": "panda_mj_description",
+    "wrist_name": "hand"
+}

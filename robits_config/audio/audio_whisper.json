@@ -1,0 +1,4 @@
+{
+    "audio_backend_name": "whisper",
+    "class_path": "robits.audio.audio.OpenAIWhisper"
+}

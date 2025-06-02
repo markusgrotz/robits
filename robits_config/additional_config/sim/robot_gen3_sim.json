@@ -1,0 +1,18 @@
+{
+    "robot_name": "gen3",
+    "class_path": "robits.sim.robot.MujocoRobot",
+    "joint_names": [
+        "gen3/joint_1",
+        "gen3/joint_2",
+        "gen3/joint_3",
+        "gen3/joint_4",
+        "gen3/joint_5",
+        "gen3/joint_6"
+    ],
+    "gripper": "gripper_robotiq_sim",
+    "camera": "camera_front_sim",
+    "description_name": "gen3_mj_description",
+    "wrist_name": "bracelet_link",
+    "wrist_quat":  "0 1 0 0",
+    "wrist_pos":  "0.0 0.0 -0.01"
+}

@@ -1,0 +1,50 @@
+{
+    "robot_name": "xarm7",
+    "class_path": "robits.sim.robot.MujocoRobot",
+    "joint_names": [
+        "xarm7/joint1",
+        "xarm7/joint2",
+        "xarm7/joint3",
+        "xarm7/joint4",
+        "xarm7/joint5",
+        "xarm7/joint6"
+    ],
+    "default_joint_positions": [
+        0.000,
+        -0.247,
+        0.000,
+        0.909,
+        0.000,
+        1.156
+    ],
+    "gripper": "gripper_xarm_sim",
+    "camera": "camera_front_sim",
+    "transform_robot_to_world": [
+        [
+            1.0,
+            0.0,
+            0.0,
+            0.25
+        ],
+        [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            1.0,
+            -0.12
+        ],
+        [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ]
+    ],
+    "description_name": "xarm7_mj_description",
+    "wrist_name": "xarm_gripper_base_link"
+}

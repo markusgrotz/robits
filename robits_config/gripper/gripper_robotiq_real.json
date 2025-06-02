@@ -1,0 +1,4 @@
+{
+    "gripper_name": "robotiq",
+    "class_path": "robits.real.robotiq_gripper.RobotiqGripper"
+}

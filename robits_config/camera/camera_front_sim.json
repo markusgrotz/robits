@@ -1,0 +1,7 @@
+{
+    "camera_name": "front",
+    "width": 640,
+    "height": 480,
+    "hz": 30,
+    "class_path": "robits.sim.camera.MujocoCamera"
+}

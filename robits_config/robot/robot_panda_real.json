@@ -1,0 +1,16 @@
+{
+    "robot_name": "panda",
+    "gripper": "gripper_robotiq_real",
+    "camera": "camera_front_real",
+    "default_joint_positions": [
+        0.000,
+        -0.7834,
+        0.000,
+        -2.3579,
+        0.000,
+        1.5708,
+        -1.5
+    ],
+    "class_path": "robits.real.franka.robot.Franka",
+    "ip_addr": "172.16.0.2"
+}

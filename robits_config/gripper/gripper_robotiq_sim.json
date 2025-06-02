@@ -1,0 +1,12 @@
+{
+    "gripper_name": "robotiq_2f85",
+    "class_path": "robits.sim.gripper.MujocoGripper",
+    "actuator_names": [
+        "gripper/fingers_actuator"
+    ],
+    "joint_names": [
+        "gripper/left_driver_joint"
+    ],
+    "invert": true,
+    "description_name": "robotiq_2f85_mj_description"
+}
