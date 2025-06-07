@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import rich_click as click
+
 from robits.cli.base_cli import cli
 from robits.cli.base_cli import console
 
@@ -8,14 +10,17 @@ from robits.cli import cli_options
 
 @cli.command()
 @cli_options.robot()
-def shell(robot):
+@click.option("-c", default=None, help="Command to execute before starting the shell")
+def shell(robot, c: str):
     """
     Creates an interactive shell. Use robot variable to interact
     """
     from robits.core.abc.control import control_types  # noqa: F401
 
-    from IPython import embed
+    if c:
+        exec(c)
 
+    from IPython import embed
     embed()
 
 
