@@ -15,8 +15,10 @@ change the configuration for the robot.  Please see the paper and the
 Installation
 ------------
 
-Environment setup and installation of **SAM2Act** is covered in the `SAM2Act code repository <https://github.com/sam2act/sam2act>`_. See the section `Environment setup <https://github.com/sam2act/sam2act?tab=readme-ov-file#environment-setup>`_ in the Readme.
-Next install **RoBits** with a simple pip install in the same repository and setup the robot.
+Installation of **SAM2Act** is covered in the `SAM2Act code repository <https://github.com/sam2act/sam2act>`_. 
+See the section `Environment setup <https://github.com/sam2act/sam2act?tab=readme-ov-file#environment-setup>`_ in the Readme.
+You can install the extras "real" for sam2act with ``pip install -e '.[real]'``.
+This will automatically install **RoBits**  and other dependencies.
 For the robot setup see the :doc:`system_setup` section for details on the
 installation. Especially, check the camera calibration with ``rb camera
 calibrate extrinsics``. If necessary, adjust the current camera calibration by
@@ -37,7 +39,7 @@ Inference
 3. Toggle the e-stop. You can test your robot setup with ``rb info pose`` or ``rb move up``
 
 4. Load the weights and run the inference with the entry point
-   ``sam2act-agent``. You can also specify the command options so you won't be
+   ``sam2act-agent`` provided by sam2act. You can also specify the command options so you won't be
    prompted.
 
     .. code-block:: bash

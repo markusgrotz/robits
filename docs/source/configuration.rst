@@ -54,12 +54,11 @@ automatically instantiated recursively.
 Please see the :doc:`api/robits` section or refer to the actual implementation for details on the parameters.
 
 
-Default
--------
+Specifying a default robot
+--------------------------
 
 When using the command line interface you can set a default robot configuration with the environment variable ``ROBITS_DEFAULT_ROBOT``
-
-
+and the decorator :func:`robits.cli.cli_options.robot`
 .. code-block:: bash
 
         echo "export ROBITS_DEFAULT_ROBOT=robot_panda_sim" >> $HOME/.bashrc

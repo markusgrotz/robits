@@ -52,3 +52,17 @@ robot's coordinate system.
 .. literalinclude:: ../../examples/pick_up_block.py
    :emphasize-lines: 19,26-31
    :linenos:
+
+
+
+
+Shell integration
+-----------------
+
+You can direclty interact with the robot using ``rb shell``. To launch a Mujoco simulation with the panda use ``rb shell --robot robot_panda_sim`` or ``export ROBITS_DEFAULT_ROBOT=robot_panda_sim``.
+Note that for Mujoco simulation the environemnt is built once you interact with it. Just access ``robot.env`` in the Ipython shell to trigger a build of the environment.
+Next paste the following to pick up a the blue block:
+
+
+.. code-block:: python
+

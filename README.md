@@ -1,30 +1,21 @@
 # RoBits - Bits and Bytes for Robotic Manipulation
 
-## `from robits import ♥`
-
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/robits)](https://pypi.org/project/robits/) 
 [![PyPI version](https://img.shields.io/pypi/v/robits)](https://pypi.org/project/robits/) 
 [![License](https://img.shields.io/pypi/l/robits)](https://github.com/markusgrotz/robits/LICENSE.md)
 [![Code style](https://img.shields.io/badge/code%20style-black-black)](https://black.readthedocs.io/en/stable/)
+[![Docs](https://readthedocs.org/projects/robits/badge/?version=latest)](https://robits.readthedocs.io/en/latest/)
 
+## `from robits import ♥`
 
 RoBits is a lightweight, modular and scalable software stack for AI-driven
 robotic manipulation.  It is designed for seamless integration with robotic
 manipulation policies, by providing essential tools for perception and robotic
 control.
 
-RoBits features an intuitive command-line interface to get started quickly.
+**Why RoBits**? RoBits features an intuitive command-line interface to get started quickly.
 It's user-friendly and ensures adaptability, efficiency, and ease of use across
 diverse robotic applications to help with research experiments.
-
-If you are using this work or find it otherwise useful please cite:
-```
-M. Grotz, M. Shridhar, Y. Chao, T. Asfour and D. Fox
-PerAct2: Benchmarking and Learning for Robotic Bimanual Manipulation Tasks.
-https://doi.org/10.48550/arXiv.2407.00278
-```
-
-Also consider citing additional resources if necessary (See [Acknowledgement](#Acknowledgement))
 
 
 ![Logo](https://raw.githubusercontent.com/markusgrotz/robits/master/docs/source/_static/logo.png)
@@ -133,8 +124,36 @@ To replay collected data, use `rb dataset replay`. You can specify the path, the
 rb dataset replay --input-path ~/data/demo_0000/ --robot-name robot_panda_sim --control-method position
 ```
 
+### Example
+
+Below is a very simple example to initialize a robot in simulation and move it.
+
+```python
+from robits.core.abc.control import control_types
+from robits.core.factory import RobotFactory
+
+robot = RobotFactory("robot_panda_sim").build()
+
+with robot.control(control_types.cartesian) as ctrl:
+    ctrl.update(([0.52, -0.2, 0.15], [0, -1, 0, 0]))
+    ctrl.update(([0.0, 0.0, -0.13], [0, 0, 0, 1]), relative=True)
+    robot.gripper.close()
+```
+
+See the documentation for more examples and also for command line integration.
+
 
 ## Libraries Acknowledgement
+
+If you are using this work or find it otherwise useful please cite:
+```
+M. Grotz, M. Shridhar, Y. Chao, T. Asfour and D. Fox
+PerAct2: Benchmarking and Learning for Robotic Bimanual Manipulation Tasks.
+https://doi.org/10.48550/arXiv.2407.00278
+```
+
+Also consider citing additional resources if necessary (See [Acknowledgement](#Acknowledgement))
+
 
 - Libraries
   - [NumPy](https://numpy.org), [SciPy](https://scipy.org/), [Open3D](https://www.open3d.org/), and more

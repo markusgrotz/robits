@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to RoBits's documentation!
-==================================
+Welcome to RoBits' documentation!
+=================================
 
 .. include::  ../../README.md
    :parser: myst_parser.sphinx_
@@ -13,7 +13,7 @@ Welcome to RoBits's documentation!
 
 .. warning::
 
-   This software is currently under development. API might change.
+   This software is currently under development. Additional features will be introduced over time.
 
 .. toctree::
    :maxdepth: 2
