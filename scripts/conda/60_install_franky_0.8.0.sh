@@ -9,8 +9,7 @@ if [ -z "$CONDA_PREFIX" ]; then
   exit 1
 fi
 
-conda install mamba -c conda forge
-mamba install poco=1.9 gcc make cmake= pybind11 -c conda-forge
+conda install poco=1.9 gcc make cmake pybind11 -c conda-forge
 
 #export CC=${CONDA_PREFIX}/bin/gcc
 #export CXX=${CONDA_PREFIX}/bin/g++

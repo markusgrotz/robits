@@ -20,7 +20,6 @@ chmod +x Miniconda3-latest-Linux-x86_64.sh
 eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
 
 conda init bash zsh
-conda install mamba -c conda-forge
 conda config --set auto_activate_base false
 
 #rm -rf "$TEMP_DIR"
