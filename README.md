@@ -18,7 +18,7 @@ It's user-friendly and ensures adaptability, efficiency, and ease of use across
 diverse robotic applications to help with research experiments.
 
 
-![Logo](https://raw.githubusercontent.com/markusgrotz/robits/master/docs/source/_static/logo.png)
+![Logo](https://raw.githubusercontent.com/markusgrotz/robits/main/docs/source/_static/logo_wide.png)
 
 
 ## Quickstart
