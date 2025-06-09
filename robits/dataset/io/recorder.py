@@ -10,9 +10,6 @@ import logging
 
 from queue import Queue
 
-
-import numpy as np
-
 from robits.core import __version__
 from robits.core.utils import FrequencyTimer
 from robits.core.abc.robot import UnimanualRobot
@@ -132,19 +129,10 @@ class DatasetRecorder:
         logging.info("Starting recording.")
         self.timer.reset()
         while not self.is_stopped:
+
             proprioception = self.robot.get_proprioception_data(True, True)
             perception = self.robot.get_vision_data()
-
-            # Update wrist camera extrinsics.
-            gripper_matrix = proprioception["gripper_matrix"]
-            m = np.linalg.inv(gripper_matrix)
-
-            for camera in self.robot.cameras:
-                if camera.is_wrist_camera():
-                    extrinsics = perception[f"{camera.camera_name}_camera_extrinsics"]
-                    perception[f"{camera.camera_name}_camera_extrinsics"] = np.dot(
-                        extrinsics, m
-                    )
+            self.robot.update_wrist_camera_extrinsics(proprioception, perception)
 
             self.data_queue.put(
                 {
