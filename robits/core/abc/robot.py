@@ -179,21 +179,28 @@ class UnimanualRobot(Perception, RobotBase):
 
         Also updates extrinsics parameters for wrist cameras
         """
+        proprioception = self.get_proprioception_data(True, True)
+        perception = self.get_vision_data()
+        self.update_wrist_camera_extrinsics(proprioception, perception)
+
         obs = {}
+        obs.update(proprioception)
+        obs.update(perception)
+        return obs
 
-        obs.update(self.get_vision_data())
-        obs.update(self.get_proprioception_data())
-
-        gripper_matrix = obs["gripper_matrix"]
-        m = np.linalg.inv(gripper_matrix)
+    def update_wrist_camera_extrinsics(
+        self, proprioception: Dict[str, Any], perception: Dict[str, Any]
+    ):
+        gripper_matrix = proprioception["gripper_matrix"]
+        transform_robot_to_wrist = np.linalg.inv(gripper_matrix)
         for camera in self.cameras:
             if camera.is_wrist_camera():
-                extrinsics = obs[f"{camera.camera_name}_camera_extrinsics"]
-                obs[f"{camera.camera_name}_camera_extrinsics"] = np.dot(
-                    self.transform_robot_to_world, np.dot(extrinsics, m)
+                extrinsics_key_name = f"{camera.camera_name}_camera_extrinsics"
+                extrinsics = perception[extrinsics_key_name]
+                perception[extrinsics_key_name] = np.dot(
+                    extrinsics,
+                    np.dot(transform_robot_to_wrist, self.transform_world_to_robot),
                 )
-
-        return obs
 
 
 class BimanualRobot(Perception):
