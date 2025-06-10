@@ -28,6 +28,7 @@ robot. Run `pip install 'robits[all]'`. This will install necessary dependencies
 provide an entry point command `rb`. You can use `rb` to get a list of
 commands. For example `rb move home` moves the robot to a default joint
 position.
+Checkout the [Documentation](https://robits.readthedocs.io/en/latest/index.html) for more details
 
 ## Command-Line-Interface
 
@@ -140,7 +141,7 @@ with robot.control(control_types.cartesian) as ctrl:
     robot.gripper.close()
 ```
 
-See the documentation for more examples and also for command line integration.
+See the [Documentation](https://robits.readthedocs.io/en/latest/exampels.html) for more details, such as command line integration, and for more examples.
 
 
 ## Libraries Acknowledgement
@@ -152,7 +153,7 @@ PerAct2: Benchmarking and Learning for Robotic Bimanual Manipulation Tasks.
 https://doi.org/10.48550/arXiv.2407.00278
 ```
 
-Also consider citing additional resources if necessary (See [Acknowledgement](#Acknowledgement))
+Also consider citing additional resources if necessary (See [Acknowledgement](https://robits.readthedocs.io/en/latest/acknowledgement.html))
 
 
 - Libraries
