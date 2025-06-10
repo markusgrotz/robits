@@ -28,10 +28,10 @@ class SceneBuilder:
     def __init__(self):
         self.scene = mjcf.RootElement()
         self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
-        self.key = self.scene.keyframe.add("key", name="home", qpos="", ctrl="")
         self.add_default_assets()
 
     def add_default_assets(self):
+        self.key = self.scene.keyframe.add("key", name="home", qpos="", ctrl="")
         self.scene.asset.add("material", name="groundplane")
         self.scene.worldbody.add("light", pos="0 0 5")
         self.scene.worldbody.add(
@@ -58,13 +58,10 @@ class SceneBuilder:
 
         for b in blueprints.values():
             if isinstance(b, RobotBlueprint):
+                gripper_blueprint: Optional[GripperBlueprint] = None
                 if b.attachment:
-                    gripper_blueprint: GripperBlueprint = blueprints[
-                        b.attachment.blueprint_id
-                    ]
-                    self.add_robot(b, gripper_blueprint)
-                else:
-                    self.add_robot(b)
+                    gripper_blueprint = blueprints.get(b.attachment.blueprint_id, None)
+                self.add_robot(b, gripper_blueprint)
 
         self.merge_all_keyframes_into_home()
 
@@ -99,9 +96,14 @@ class SceneBuilder:
     def add_geom(self, blueprint: GeomBlueprint):
         if not blueprint.is_static:
             body = self.scene.worldbody.add("body", name=f"{blueprint.name}_body")
-            body.add("freejoint")
+            joint = body.add("freejoint")
+            joint.name = f"{blueprint.name}_joint"
+            # Set the position of the object via joints. Alternatively use joint_qpos = np.array([0., 0., 0., 1., 0., 0., 0.])
+            joint_qpos = np.concatenate(
+                [blueprint.pose.position, blueprint.pose.quaternion_wxyz], axis=None
+            )
             for k in self.scene.find_all("key"):
-                k.qpos = np.concatenate([k.qpos, [0] * 7], axis=None)
+                k.qpos = np.concatenate([k.qpos, joint_qpos], axis=None)
         else:
             body = self.scene.worldbody
         geom = body.add(
@@ -112,7 +114,11 @@ class SceneBuilder:
             size=blueprint.size,
             rgba=blueprint.rgba,
         )
-        self.set_pose(geom, blueprint.pose)
+
+        # set the pose for static objects
+        if blueprint.is_static:
+            self.set_pose(geom, blueprint.pose)
+
         return self
 
     def add_robot(
