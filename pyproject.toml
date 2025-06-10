@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "robits"
-version = "0.5.0"
+version = "0.5.1"
 description = "Lightweight, modular, and scalable software stack for AI-driven robotic manipulation."
 authors = ["Markus Grotz <grotz@uw.edu>"]
 packages = [{include = "robits"}, {include = "robits_config"}]
