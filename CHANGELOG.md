@@ -7,3 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.5.1]
+
+ - Revised MuJoCo model_factory handling of objects with freejoints
+ - Fix wrist camera extrinsics 
+ - Updated documentation
+ - Moved SAM2Act agent to sam2act repository 
+ - Fixed gripper camera extrinsics
+ - Remove mamba from scripts
+
+
+## [0.5.0]
+ - Initial release
