@@ -58,7 +58,7 @@ pyrealsense2 = { version = "^2.55.1", markers = "python_version < '3.12' and pla
 
 # For Python 3.12 and above, using the beta version
 pyrealsense2-beta = { version = "2.56.0.8430", markers = "python_version >= '3.12' and platform_machine == 'x86_64'", optional = true }
-#pyrobotiqgripper = {git = "https://github.com/markusgrotz/pyRobotiqGripper.git", extras = ["real", "all"], optional = true}
+pyrobotiqgripper = { version = ">=1.0.1", extras = ["real", "all"], optional = true}
 franky-panda = { version = "*", markers = "platform_machine == 'x86_64'", extras = ["real", "all"], optional = true}
 urx = {version = "^0.11.0", extras = ["ur", "all"], optional = true}
 xarm-python-sdk = {version ="^1.15.3", extras = ["xarm", "all"], optional = true}
