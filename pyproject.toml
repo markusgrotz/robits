@@ -1,11 +1,14 @@
-[tool.poetry]
+[project]
 name = "robits"
 version = "0.5.1"
 description = "Lightweight, modular, and scalable software stack for AI-driven robotic manipulation."
-authors = ["Markus Grotz <grotz@uw.edu>"]
+authors = [
+  { name = "Markus Grotz", email = "grotz@uw.edu" }
+]
 packages = [{include = "robits"}, {include = "robits_config"}]
 readme = "README.md"
 keywords = ["robotics", "AI", "manipulation", "research", "perception", "control", "simulation"]
+requires-python = ">=3.9"
 
 classifiers = [
     "Development Status :: 4 - Beta", 
