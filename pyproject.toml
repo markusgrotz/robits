@@ -1,6 +1,6 @@
 [project]
 name = "robits"
-version = "0.5.1"
+version = "0.5.2"
 description = "Lightweight, modular, and scalable software stack for AI-driven robotic manipulation."
 readme = "README.md"
 requires-python = ">=3.9,<3.13"

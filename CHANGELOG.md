@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.5.2] - 
+
+ - Migrate from poetry to PEP 621 project metadata
+ - Refactored code
  - Update pyrobotiqgripper dependency
 
 ## [0.5.1]
@@ -21,3 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0]
  - Initial release
+
+
+## Release history
+
+[0.5.2]: https://github.com/markusgrotz/robits/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/markusgrotz/robits/compare/v0.5.0...v0.5.1
