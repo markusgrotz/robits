@@ -70,7 +70,6 @@ class SceneBuilder:
                 self.add_robot(b, gripper_blueprint)
 
         self.merge_all_keyframes_into_home()
-
         logger.debug("Model is %s", self.scene.to_xml_string())
         return utils.reload_model_with_assets(self.scene)
 
@@ -94,7 +93,7 @@ class SceneBuilder:
                 k.qpos = np.concatenate([k.qpos, DEFAULT_FREE_JOINT_QPOS], axis=None)
     
         geom = body.add("geom", type="mesh", mass=1.0, mesh=f"{blueprint.name}_mesh")
-        self.set_pose(geom, blueprint.pose)
+        utils.set_pose(geom, blueprint.pose)
         return self
 
     @add.register
@@ -103,7 +102,7 @@ class SceneBuilder:
             blueprint.model_path, escape_separators=True
         )
         object = self.scene.attach(object)
-        self.set_pose(object, blueprint.pose)
+        utils.set_pose(object, blueprint.pose)
         return self
 
     @add.register
@@ -115,7 +114,7 @@ class SceneBuilder:
         camera = self.scene.worldbody.add(
             "camera", name=camera_name, mode="trackcom"# , target="box_body"
         )
-        self.set_pose(camera, blueprint.pose)
+        utils.set_pose(camera, blueprint.pose)
         return self
 
     @add.register
@@ -128,16 +127,18 @@ class SceneBuilder:
                 k.qpos = np.concatenate([k.qpos, DEFAULT_FREE_JOINT_QPOS], axis=None)
         else:
             body = self.scene.worldbody
+
         geom = body.add(
             "geom",
             type=blueprint.geom_type,
             name=blueprint.name,
+            #mass=10.02,
             mass=0.02,
             size=blueprint.size,
             rgba=blueprint.rgba,
         )
 
-        self.set_pose(geom, blueprint.pose)
+        utils.set_pose(geom, blueprint.pose)
         return self    
 
     def add_mocap(
@@ -164,26 +165,9 @@ class SceneBuilder:
             robot = self.attach_gripper(robot, blueprint.attachment, gripper_blueprint)
 
         robot = self.scene.attach(robot)
-        self.set_pose(robot, blueprint.pose)
+        utils.set_pose(robot, blueprint.pose)
         return self
 
-    def set_pose(self, element, pose: Optional[Pose] = None):
-        if pose is None:
-            return
-        if (
-            element.quat is not None
-            or element.euler is not None
-            or element.axisangle is not None
-        ):
-            logger.error(
-                "Element orientation already set for element %s. Discarding stored information.",
-                element,
-            )
-            element.quat = None
-            element.axisangle = None
-            element.euler = None
-        element.pos = pose.position
-        element.quat = pose.quaternion_wxyz
 
     def merge_all_keyframes_into_home(self):
         qpos = []
@@ -241,6 +225,6 @@ class SceneBuilder:
             attachment_site.name = "attachment_site"
 
         frame = attachment_site.attach(gripper_model)
-        self.set_pose(frame, attachment_blueprint.wrist_pose)
+        utils.set_pose(frame, attachment_blueprint.wrist_pose)
 
         return arm_model

@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import Sequence
 
 import os
 from importlib import import_module
@@ -10,6 +11,8 @@ import mujoco
 from dm_control import mjcf
 
 from robits.sim.blueprints import RobotDescriptionModel
+from robits.sim.blueprints import Pose
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,17 +24,15 @@ def load_and_clean_model(blueprint: RobotDescriptionModel):
     ensure_existing_home_key(model)
     return model
 
-
 def reload_model_with_assets(model):
     return mujoco.MjModel.from_xml_string(model.to_xml_string(), model.get_assets())
-
 
 def load_model_from_path(path_name, escape_separators=False):
     return mjcf.from_path(path_name, escape_separators)
 
 
 def load_model_from_blueprint(blueprint: RobotDescriptionModel):
-    logger.info("Loading model %s", load_model_from_blueprint)
+    logger.info("Loading model %s", blueprint)
     model = load_model_from_robot_descriptions(
         blueprint.description_name, blueprint.variant_name
     )
@@ -67,7 +68,6 @@ def remove_invalid_joints(model):
                 k.qpos = k.qpos[7:]
             j.remove()
 
-
 # can this be replaced?
 def merge_home_keys(arm_model, gripper_model):
     # merges the home key of the arm and the gripper
@@ -89,31 +89,52 @@ def merge_home_keys(arm_model, gripper_model):
 
 
 def ensure_existing_home_key(model):
-    # .no keyframe there adding default one
-    if not model.find_all("key"):
-        logger.error(
-            "Unable to find a home key for model %s. Manually adding one", model
-        )
-        k = model.keyframe.add("key", name="home")
-        num_joints = len(model.worldbody.find_all("joint"))
-        num_actuators = len(model.find_all("actuator"))
-        logger.debug(
-            "Found %d joints and %d actuators for key", num_joints, num_actuators
-        )
-        k.qpos = np.zeros(num_joints)
-        k.ctrl = np.zeros(num_actuators)
+    physics = mjcf.Physics.from_mjcf_model(model)
+    for k in model.find_all("key"):
+        if hasattr(k, "name") and k.name == "home":
+            return model
+    logger.error(
+        "Unable to find a home key for model %s. Manually adding one", model
+    )
+    k = model.keyframe.add("key", name="home")
+    k.ctrl = np.zeros(physics.model.nu)
+    k.qpos = np.zeros(physics.model.nq)
+
     return model
 
 
 def remove_non_home_key(model):
     for k in model.find_all("key"):
-        if not k:
-            logger.error("Found non existing key.")
-            continue
-        elif not hasattr(k, "name") or k.name is None:
+        if not hasattr(k, "name") or k.name is None:
             logger.warning("Removing invalid key. Reason key has no name")
             k.remove()
         elif "home" not in k.name:
             logger.warning("Removing non home key with name %s", k.name)
             k.remove()
     return model
+
+def update_joint_position(model, new_joint_position: Sequence[float]):
+    q_len = len(new_joint_position)
+    for k in model.find_all("key"):
+        if len(k.ctrl) != q_len:
+            logger.warning("Joint has %s invalid length. Expected %d was %d.", k, q_len, len(k.ctrl))
+        k.qpos[:q_len] = np.asarray(new_joint_position)
+        k.ctrl[:q_len] = np.asarray(new_joint_position)
+
+def set_pose(element, pose: Optional[Pose] = None):
+    if pose is None:
+        return
+    if (
+        element.quat is not None
+        or element.euler is not None
+        or element.axisangle is not None
+    ):
+        logger.error(
+            "Element orientation already set for element %s. Discarding stored information.",
+            element,
+        )
+        element.quat = None
+        element.axisangle = None
+        element.euler = None
+    element.pos = pose.position
+    element.quat = pose.quaternion_wxyz
