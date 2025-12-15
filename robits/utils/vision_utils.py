@@ -104,3 +104,13 @@ def get_camera_data_resized(
     new_camera_data = CameraData(np.array(rgb_image), np.array(depth_image))
     new_metadata: Dict[str, Any] = {}
     return new_camera_data, new_metadata
+
+
+
+def make_camera_intrinsics(fx: float, fy: float, width: int, height: int) -> np.ndarray:
+    intrinsics = np.identity(3)
+    intrinsics[0, 0] = fx
+    intrinsics[1, 1] = fy
+    intrinsics[0, 2] = width / 2.0
+    intrinsics[1, 2] = height / 2.0
+    return intrinsics
