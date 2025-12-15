@@ -1,7 +1,6 @@
 """
 Class that contains blueprints for the scene such as robots and objects
 """
-
 from typing import Optional
 from typing import Any
 from typing import Sequence
@@ -104,7 +103,6 @@ class Pose:
 
 @dataclass(frozen=True)
 class CameraBlueprint(Blueprint):
-    pass
 
     width: int
 
@@ -124,6 +122,10 @@ class CameraBlueprint(Blueprint):
         return np.linalg.inv(self.pose.matrix)
     
 
+@dataclass(frozen=True)
+class BlueprintGroup(Blueprint):
+
+    pose: Optional[Pose] = None
     
 
 @dataclass(frozen=True)
@@ -134,7 +136,7 @@ class GeomBlueprint(Blueprint):
     pose: Optional[Pose] = None
 
     size: Sequence[float] = field(default_factory=lambda: [0.02, 0.02, 0.02])
-
+    
     rgba: Optional[Sequence[float]] = None
 
     is_static: bool = False
@@ -177,6 +179,7 @@ class RobotDescriptionModel:
 @dataclass(frozen=True)
 class Attachment:
 
+    """the id of the blueprint that we want to attach"""
     blueprint_id: str
 
     wrist_name: str
@@ -194,6 +197,8 @@ class RobotBlueprint(Blueprint):
     pose: Optional[Pose] = None
 
     attachment: Optional[Attachment] = None
+
+    default_joint_positions: Optional[Sequence[float]] = None
 
 
 @dataclass(frozen=True)
