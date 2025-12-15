@@ -15,9 +15,10 @@ from robits.utils import vision_utils
 from robits.dataset.io.recorder import DatasetRecorder
 from robits.dataset.io.writer import DatasetWriter
 
+from robits.sim.env_design import env_designer
+
 from robits.cli import cli_utils
 from robits.cli import cli_options
-
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,8 @@ logger = logging.getLogger(__name__)
 )
 @cli_options.robot()
 def cli(output_path, robot):
+
+    env_designer.add_blocks()
 
     console = cli_utils.console
 
