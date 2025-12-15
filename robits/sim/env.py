@@ -1,11 +1,17 @@
 from typing import Dict
 from typing import Any
+from typing import List
+from typing import Set
+
+import logging
 
 import time
 import threading
 from functools import lru_cache
 
-import logging
+# import numpy as np
+from scipy.spatial.transform import Rotation as R
+
 
 import mujoco
 import mujoco.viewer
@@ -96,6 +102,11 @@ class MujocoEnv:
                 viewer.sync()
                 self.render_cameras(renderer)
                 # time.sleep(0.002)
+
+                # reset the cache
+                self.get_collisions.cache_clear()
+                self.get_scene_info.cache_clear()
+
                 self.seq += 1
 
     def render_cameras(self, renderer) -> None:
@@ -104,7 +115,8 @@ class MujocoEnv:
 
         :param renderer: the renderer to use
         """
-        mujoco.mj_forward(self.model, self.data)
+        # We already called mj_step
+        # mujoco.mj_forward(self.model, self.data)
 
         new_camera_data = {}
         # since we control the step function in the simulation we can set it to a single timestamp.
@@ -131,6 +143,72 @@ class MujocoEnv:
         Returns the number of free joint in the model
         """
         return sum(self.model.jnt_type == mujoco.mjtJoint.mjJNT_FREE)
+    
+
+    @lru_cache(maxsize=1)
+    def get_scene_info(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Gets the current information about objects in the scene. 
+        An object is defined as geom element, whose parent bodies have a free
+        joint.
+        The result of this function is cached but resetted after each
+        simulation step
+
+        :returns: information, such as pose, about objects in the scene
+        """
+        data = {}
+        for i in range(self.model.ngeom):
+            geom_body_id = self.model.geom_bodyid[i]
+            # Check if the body has a freejoint
+            has_freejoint = False
+            for j in range(self.model.njnt):
+                if self.model.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE and self.model.jnt_bodyid[j] == geom_body_id:
+                    has_freejoint = True
+                    break
+
+            if not has_freejoint:
+                continue
+
+            # ..todo:: extract..
+            obj_model = self.model.geom(i)
+            obj_data = self.data.geom(i)
+            name = obj_data.name
+            mat = obj_data.xmat.reshape(3, 3)
+            q = R.from_matrix(mat).as_quat()
+
+            data[name] = {
+                "id": obj_data.id,
+                "name": name,
+                "position": obj_data.xpos,
+                "quaternion": q,
+                "size": obj_model.size,
+                "friction": obj_model.friction,
+                "rgba": obj_model.rgba,
+            }
+        return data
+
+
+    @lru_cache(maxsize=1)
+    def get_collisions(self) -> List[Set[str]]:
+        """
+        Object names that are in collision. Result of this function is cached,
+        but the cache is resetted after each simulation step.
+
+        :returns: The object that are in collisions
+        """
+        colliding_objects = []
+
+        for i in range(self.data.ncon):
+            c = self.data.contact[i]
+            g1 = c.geom1
+            g2 = c.geom2
+            dist = c.dist
+            name1 = self.model.geom(g1).name
+            name2 = self.model.geom(g2).name
+            if dist < 0:
+                colliding_objects.append({name1, name2})
+
+        return colliding_objects
 
     @classmethod
     @lru_cache(maxsize=1)
