@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 
 from openai import OpenAI
+from openai.types.chat.chat_completion import ChatCompletion
 
 
 class PromptBuilder:
@@ -15,6 +16,7 @@ class PromptBuilder:
 
     def add_instruction(self, text: str):
         self.content.append({"type": "text", "text": text})
+        return self
 
     def add_image(self, np_image: np.ndarray, resize=False):
 
@@ -41,7 +43,7 @@ class PromptBuilder:
             }
         )  # low, high, auto
 
-        return image
+        return self
 
     def build(self):
         return {"role": "user", "content": self.content}
@@ -55,13 +57,13 @@ class ChatGPT:
     def __init__(self):
         self.client = OpenAI()
 
-    def query(self, prompt) -> str:
+    def query(self, prompt) -> ChatCompletion:
 
         if isinstance(prompt, PromptBuilder):
             prompt = prompt.build()
 
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini", messages=[prompt], max_tokens=300
+            model="gpt-5.2", messages=[prompt]#, max_tokens=300
         )
 
         return response
