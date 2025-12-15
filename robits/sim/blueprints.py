@@ -59,21 +59,27 @@ class Pose:
 
     matrix: np.ndarray = field(default_factory=lambda: np.identity(4))
 
-    # is_relative: bool = False
-
-    @property
-    def position(self):
-        return self.matrix[:3, 3]
-
     def with_position(self, new_position: Sequence[float]):
         new_matrix = self.matrix.copy()
         new_matrix[:3, 3] = np.asarray(new_position, dtype=float)
-        return Pose(matrix=new_matrix)
+        return replace(self, matrix=new_matrix)
 
     def with_quat(self, new_quat: Sequence[float]):
         new_matrix = self.matrix.copy()
         new_matrix[:3, :3] = R.from_quat(new_quat).as_matrix()
-        return Pose(matrix=new_matrix)
+        return replace(self, matrix=new_matrix)
+    
+    def with_quat_wxyz(self, new_quat: Sequence[float]):
+        return self.with_quat(np.concatenate((new_quat[1:], new_quat[:1])))
+    
+    def with_euler(self, new_euler: Sequence[float], degrees=False):
+        new_matrix = self.matrix.copy()
+        new_matrix[:3, :3] = R.from_euler('XYZ', new_euler, degrees).as_matrix()
+        return replace(self, matrix=new_matrix)
+    
+    @property
+    def position(self):
+        return self.matrix[:3, 3]
 
     @property
     def quaternion(self):
@@ -93,6 +99,8 @@ class Pose:
         if self.matrix.shape != (4, 4):
             raise ValueError("pose must be a 4x4 transformation matrix")
 
+    def to_dict(self) -> Dict:
+        return self.matrix.tolist()
 
 @dataclass(frozen=True)
 class CameraBlueprint(Blueprint):
