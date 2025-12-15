@@ -108,9 +108,10 @@ class SceneBuilder:
         if self.scene.find("camera", camera_name):
             logger.warning("Camera %s already added", camera_name)
             return self
-        self.scene.worldbody.add(
-            "camera", name=camera_name, pos="0 0 2", mode="trackcom", target="box_body"
+        camera = self.scene.worldbody.add(
+            "camera", name=camera_name, mode="trackcom"# , target="box_body"
         )
+        self.set_pose(camera, blueprint.pose)
         return self
 
     @add.register(GeomBlueprint)

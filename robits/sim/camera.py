@@ -14,8 +14,11 @@ from robits.sim.blueprints import CameraBlueprint
 from robits.sim.env_client import MujocoEnvClient
 from robits.sim.env_design import env_designer
 
-logger = logging.getLogger(__name__)
+from robits.utils.vision_utils import make_camera_intrinsics
 
+DEFAULT_FOCAL_LENGTH = 579.4113
+
+logger = logging.getLogger(__name__)
 
 class MujocoCamera(CameraBase, MujocoEnvClient):
     """
@@ -33,7 +36,8 @@ class MujocoCamera(CameraBase, MujocoEnvClient):
         self._camera_name = camera_name
         self.width = width
         self.height = height
-        env_designer.add(CameraBlueprint(camera_name))
+        self._intrinsics = make_camera_intrinsics(DEFAULT_FOCAL_LENGTH, DEFAULT_FOCAL_LENGTH, width, height)
+        env_designer.add(CameraBlueprint(camera_name, width, height, self._intrinsics))
 
     @property
     def camera_name(self) -> str:
@@ -59,17 +63,14 @@ class MujocoCamera(CameraBase, MujocoEnvClient):
         return np.linalg.inv(extrinsics)
 
     @property
-    @lru_cache(1)
     def intrinsics(self):
+        return self._intrinsics
+
+    @lru_cache(1)
+    def intrinsics_from_model(self):
         c = self.env.model.cam(self.camera_name)
 
         fy = (self.height / 2.0) / np.tan(np.deg2rad(c.fovy / 2.0))
         fx = fy
 
-        intrinsics = np.identity(3)
-        intrinsics[0, 0] = fx
-        intrinsics[1, 1] = fy
-        intrinsics[0, 2] = self.width / 2.0
-        intrinsics[1, 2] = self.height / 2.0
-
-        return intrinsics
+        return make_camera_intrinsics(fx, fy, self.width, self.height)

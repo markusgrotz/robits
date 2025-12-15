@@ -106,6 +106,25 @@ class Pose:
 class CameraBlueprint(Blueprint):
     pass
 
+    width: int
+
+    height: int
+
+    intrinsics: np.ndarray
+
+    pose: Optional[Pose] = None
+
+    @property
+    def extrinsics(self):
+        """
+        world to camera coordinates
+        """
+        if self.pose is None:
+            return np.identity(4)
+        return np.linalg.inv(self.pose.matrix)
+    
+
+    
 
 @dataclass(frozen=True)
 class GeomBlueprint(Blueprint):
