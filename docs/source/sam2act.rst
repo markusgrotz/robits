@@ -60,3 +60,12 @@ Since the keyframe heuristic relies on pauses it is necessary to record and
 replay the trajectory or use scripted demonstrations. See
 :doc:`data_collection` for more details.
 
+
+References
+----------
+
+```
+SAM2Act: Integrating Visual Foundation Model with A Memory Architecture for Robotic Manipulation.
+Haoquan Fang, Markus Grotz, Wilbert Pumacay, Yi Ru Wang, Dieter Fox, Ranjay Krishna, Jiafei Duan
+International Conference on Machine Learning (ICML), 2025.
+```
