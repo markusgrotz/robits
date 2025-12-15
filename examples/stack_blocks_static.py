@@ -18,6 +18,7 @@ from robits.dataset.io.writer import DatasetWriter
 from robits.cli import cli_utils
 from robits.cli import cli_options
 
+from robits.sim.env_design import env_designer
 
 @click.command
 @filepath_option(
@@ -25,6 +26,8 @@ from robits.cli import cli_options
 )
 @cli_options.robot()
 def cli(output_path, robot):
+
+    env_designer.add_blocks()
 
     console = cli_utils.console
     console.rule("Starting")
