@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import Sequence
 
 from functools import singledispatchmethod
 
@@ -13,6 +14,7 @@ from robits.sim.blueprints import RobotBlueprint
 from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import ObjectBlueprint
+from robits.sim.blueprints import MeshBlueprint
 from robits.sim.blueprints import GeomBlueprint
 from robits.sim.blueprints import Pose
 
@@ -71,6 +73,25 @@ class SceneBuilder:
     @singledispatchmethod
     def add(self, blueprint):
         raise NotImplementedError(f"Unsupported blueprint type: {type(blueprint)}")
+
+    @add.register
+    def add_mesh(self, blueprint: MeshBlueprint):
+        mujoco_scale = f"{blueprint.scale} {blueprint.scale} {blueprint.scale}"
+        self.scene.asset.add(
+            "mesh", name=f"{blueprint.name}_mesh", file=blueprint.mesh_path, scale=mujoco_scale
+        )
+        if  blueprint.is_static:
+            body = self.scene.worldbody
+        else:
+            body = self.scene.worldbody.add("body", name=f"{blueprint.name}_body")
+            joint = body.add("freejoint")
+            joint.name = f"{blueprint.name}_joint"
+            for k in self.scene.find_all("key"):
+                k.qpos = np.concatenate([k.qpos, DEFAULT_FREE_JOINT_QPOS], axis=None)
+    
+        geom = body.add("geom", type="mesh", mass=1.0, mesh=f"{blueprint.name}_mesh")
+        self.set_pose(geom, blueprint.pose)
+        return self
 
     @add.register
     def add_object(self, blueprint: ObjectBlueprint):

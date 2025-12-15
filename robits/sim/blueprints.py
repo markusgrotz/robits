@@ -122,6 +122,18 @@ class GeomBlueprint(Blueprint):
 
 
 @dataclass(frozen=True)
+class MeshBlueprint(Blueprint):
+
+    mesh_path: str
+
+    pose: Optional[Pose] = None
+
+    is_static: bool = False
+
+    scale: float = 1.0
+
+
+@dataclass(frozen=True)
 class ObjectBlueprint(Blueprint):
 
     model_path: str
