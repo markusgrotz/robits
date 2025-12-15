@@ -2,14 +2,13 @@
 name = "robits"
 version = "0.5.1"
 description = "Lightweight, modular, and scalable software stack for AI-driven robotic manipulation."
+readme = "README.md"
+requires-python = ">=3.9,<3.13"
+license = {file = "LICENSE.md"}
+keywords = ["robotics", "AI", "manipulation", "research", "perception", "control", "simulation"]
 authors = [
   { name = "Markus Grotz", email = "grotz@uw.edu" }
 ]
-packages = [{include = "robits"}, {include = "robits_config"}]
-readme = "README.md"
-keywords = ["robotics", "AI", "manipulation", "research", "perception", "control", "simulation"]
-requires-python = ">=3.9"
-
 classifiers = [
     "Development Status :: 4 - Beta", 
     "Programming Language :: Python :: 3",
@@ -46,28 +45,20 @@ dependencies = [
     "dm-control>=1.0.30,<2.0; extra == 'sim'",
 
     # optional real
-    # pyrealsense2 use beta  version for Python 3.12 and above.
+    # some of the dependencies are only available for specific machine architectures.
+    # use pyrealsense2 beta package for Python 3.12 and above.
     "pyrealsense2>=2.55.1,<3.0; python_version < '3.12' and platform_machine == 'x86_64' and extra == 'real'",
     "pyrealsense2-beta==2.56.0.8430; python_version >= '3.12' and platform_machine == 'x86_64' and extra == 'real'",
     "pyrobotiqgripper>=1.0.1; extra == 'real'",
     "franky-panda; platform_machine == 'x86_64' and extra == 'real'",
-    "urx>=0.11.0; extra == 'ur'",
-    "xarm-python-sdk>=1.15.3; extra == 'xarm'",
-
-    # optional remote
-    "zmq>=0.0.0; extra == 'remote'",
-    "pyzmq>=26.4.0; extra == 'remote'",
-    "psutil>=7.0.0; extra == 'remote'",
-
+  
     # optional audio
     "openai>=1.64.0; extra == 'audio'",
     "openai-whisper>=20240930; extra == 'audio'",
     "sounddevice>=0.5.2; extra == 'audio'",
 
     # optional usd
-
-    # usd - only compatible with Python < 3.11
-    "usd-core>=23.5.0; python_version < '3.11' and extra == 'usd'",
+    "usd-core>=23.5.0; extra == 'usd'",
 ]
 
 [project.optional-dependencies]
@@ -78,6 +69,7 @@ real = [
     "pyrealsense2>=2.55.1; python_version<'3.12' and platform_machine=='x86_64'",
     "pyrealsense2-beta==2.56.0.8430; python_version>='3.12' and platform_machine=='x86_64'",
 ]
+
 usd = ["usd-core", "mujoco", "robot-descriptions", "dm-control"]
 all = [
       "pyrobotiqgripper",
@@ -87,12 +79,10 @@ all = [
        "mujoco", "robot-descriptions", "dm-control", "usd-core",
        "zmq", "pyzmq", "psutil"]
 dev = ["sphinx", "toml", "myst-parser", "sphinx-rtd-theme", "sphinxcontrib-video", "black", "ruff"]
-ur = ["urx"]
-xarm = ["xarm-python-sdk"]
+ur = ["urx>=0.11.0"]
+xarm = ["xarm-python-sdk>=1.15.3"]
 remote = ["zmq", "pyzmq", "psutil"]
 audio = ["openai", "openai-whisper", "sounddevice"]
-
-
 
 [project.urls]
 homepage = "https://robits.ai"
@@ -101,8 +91,12 @@ documentation = "https://robits.readthedocs.io/en/latest/"
 tracker = "https://github.com/markusgrotz/robits/issues"
 
 [build-system]
-requires = ["poetry-core>=1.0.8"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.4,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = ["robits", "robits_config"]
+module-root = ""
 
 [project.scripts]
 rb = 'robits.cli.main:cli'
