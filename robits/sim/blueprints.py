@@ -1,14 +1,22 @@
 """
-Class that contains blueprints to the scene model and objects
+Class that contains blueprints for the scene such as robots and objects
 """
 
 from typing import Optional
+from typing import Any
 from typing import Sequence
+from typing import Dict
+from typing import List
 
 from abc import ABC
+import importlib
+import json
 
 from dataclasses import dataclass
 from dataclasses import field
+from dataclasses import fields as dc_fields
+from dataclasses import is_dataclass
+from dataclasses import replace
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -25,6 +33,25 @@ class Blueprint(ABC):
     @property
     def id(self) -> str:
         return f"{self.__class__.__name__.lower()}_{self.name}"
+
+    def to_dict(self) -> Dict:
+        """
+        Serialize this blueprint (and nested dataclasses) to a plain dict.
+        """
+        def _convert(obj):
+            if is_dataclass(obj):
+                cls = obj.__class__
+                out = {"class_path": f"{cls.__module__}.{cls.__name__}"}
+                for f in dc_fields(obj):
+                    out[f.name] = _convert(getattr(obj, f.name))
+                return out
+            if isinstance(obj, (list, tuple)):
+                return [_convert(v) for v in obj]
+            if isinstance(obj, dict):
+                return {k: _convert(v) for k, v in obj.items()}
+            return obj
+
+        return _convert(self)
 
 
 @dataclass(frozen=True)
@@ -136,3 +163,40 @@ class GripperBlueprint(Blueprint):
     model: RobotDescriptionModel
 
     # delta_offset: Optional[Pose] = None
+
+
+def convert_json_to_bp(data: Any) -> Blueprint:
+
+    def _build(obj: Any) -> Any:
+        if isinstance(obj, list):
+            return [_build(v) for v in obj]
+        if isinstance(obj, dict) and "class_path" in obj:
+            module_name, class_name = obj["class_path"].rsplit(".", 1)
+            if not module_name == "robits.sim.blueprints":
+                import logging
+                logging.getLogger(__name__).error("Invalid module name %s in json data.", module_name)
+
+            module = importlib.import_module(module_name)
+            cls = getattr(module, class_name)
+            kwargs = {}
+            for f in dc_fields(cls):
+                if f.name in obj:
+                    val = _build(obj[f.name])
+                    if cls is Pose and f.name == "matrix" and not isinstance(val, np.ndarray):
+                        val = np.asarray(val, dtype=float)
+                    kwargs[f.name] = val
+            return cls(**kwargs)
+        if isinstance(obj, dict):
+            return {k: _build(v) for k, v in obj.items()}
+        return obj
+
+    return _build(data)
+
+
+def blueprints_from_json(json_string: str) -> List[Blueprint]:
+    blueprints = []
+    json_data = json.loads(json_string)
+    for item in json_data.get("blueprints", []):
+        bp = convert_json_to_bp(item)
+        blueprints.append(bp)
+    return blueprints
