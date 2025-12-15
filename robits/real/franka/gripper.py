@@ -95,7 +95,6 @@ class FrankaGripper(GripperBase):
         Reading the current gripper.width:
 
         46.8 ms ± 2.11 ms per loop (mean ± std. dev. of 7 runs, 100 loops each)
-
         """
         with self.lock:
             return self.gripper.width / self.max_joint_position
@@ -140,4 +139,7 @@ class FrankaGripper(GripperBase):
     def set_pos(self, pos):
         with self.lock:
             self.last_cmd_timestamp = time.time()
-            self.gripper.move(pos, speed=self.config["speed"])
+            # .. todo:: reset the width value
+            #self.normalized_width.cache_clear()
+            unnormalized_pos = pos * self.max_joint_position
+            self.gripper.move(unnormalized_pos, speed=self.config["speed"])

@@ -50,16 +50,10 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         return self._gripper_name
 
     def open(self):
-        if self.invert:
-            self.data.ctrl[self.actuator_ids] = self.ctrl_min
-        else:
-            self.data.ctrl[self.actuator_ids] = self.ctrl_max
+        self.set_pos(1.0)
 
     def close(self):
-        if self.invert:
-            self.data.ctrl[self.actuator_ids] = self.ctrl_max
-        else:
-            self.data.ctrl[self.actuator_ids] = self.ctrl_min
+        self.set_pos(0.0)
 
     def get_obs(self) -> Dict[str, Any]:
         qpos = self.data.qpos[self.joint_ids].copy()
@@ -74,6 +68,13 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
 
     def _unnormalize(self, qpos):
         return qpos * (self.ctrl_max - self.ctrl_min) + self.ctrl_min
+
+    def set_pos(self, pos):
+        if self.invert:
+            qpos = self._unnormalize(1.0 - pos)
+        else:
+            qpos = self._unnormalize(pos)
+        self.data.ctrl[self.actuator_ids] = qpos
 
     # def set_pos(self, pos):
     #    self.data.ctrl[self.actuator_ids] = self._unnormalize(pos)

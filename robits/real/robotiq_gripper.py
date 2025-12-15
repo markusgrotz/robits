@@ -140,11 +140,27 @@ class RobotiqGripper(GripperBase):
                 logger.warning("gripper is not calibrated")
                 return 0.0
             position_in_mm = self.gripper.getPositionmm()
-        return (position_in_mm - self.gripper.closemm) / (
-            self.gripper.openmm - self.gripper.closemm
+        return self._normalize_value(position_in_mm)
+    
+    def get_pos_raw(self) -> float:
+        return self.gripper.getPositionmm()
+    
+    def _normalize_value(self, value):
+        min_value = self.gripper.closemm
+        max_value = self.gripper.openmm
+        return  (value - min_value) / (
+            max_value - min_value
         )
 
+    def _unnormalize_value(self, value):
+        min_value = self.gripper.closemm
+        max_value = self.gripper.openmm
+        return value * (max_value - min_value) + min_value
+
     def get_obs(self):
+        """
+        ..todo:: would be good to have the raw value as well
+        """
         return {
             "finger_positions": np.asarray([self.normalized_width]),
             "timestamp": time.time(),
@@ -152,3 +168,12 @@ class RobotiqGripper(GripperBase):
 
     def is_open(self) -> bool:
         return self.normalized_width > 0.5
+
+    def set_pos(self, normalized_pos):
+        """
+        """
+        clamped = max(0.0, min(1.0, normalized_pos))
+        with self.lock:
+            pos_bit = int(clamped * 255)
+            self.gripper.goTo(pos_bit)
+            #self.gripper.goTomm

@@ -33,6 +33,16 @@ class GripperBase(ABC):
         """
         pass
 
+    # @abstractmethod
+    def set_pos(self, pos):
+        """
+        Set the open amount the gripper / hand
+
+        :param pos: the normalized position
+        """
+        raise NotImplementedError("Not implemented yet")
+
+
     @abstractmethod
     def is_open(self) -> bool:
         """
@@ -60,7 +70,3 @@ class GripperBase(ABC):
         :returns: Dictionary containing gripper information
         """
         pass
-
-    # @abstractmethod
-    # def set_pos(self, pos):
-    #    pass
