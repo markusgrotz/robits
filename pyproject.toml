@@ -26,63 +26,84 @@ classifiers = [
 ]
 
 dependencies = [
-    # core
-    "numpy>=1.24",
-    "matplotlib>=3.7.5,<4.0.0",
-    "scipy>=1.13,<2.0.0",
-    "ipython>=8.0",
-    "rich-click>=1",
-    "click-prompt>=0.6.0",
-    "textual>=1.0.0,<2.0.0",
-    "textual-slider>=0.1.2,<0.2.0",
+  # core
+  "numpy>=1.24",
+  "matplotlib>=3.7.5,<4.0.0",
+  "scipy>=1.13,<2.0.0",
+  "ipython>=8.0",
+  "rich-click>=1",
+  "click-prompt>=0.6.0",
+  "textual>=1.0.0,<2.0.0",
+  "textual-slider>=0.1.2,<0.2.0",
 
-    "open3d==0.18.*; python_version < '3.10'",
-    "open3d>=0.18; python_version >= '3.10'",
-
-    # optional sim
-    "mujoco>=3.3,<4.0; extra == 'sim'",
-    "robot-descriptions>=1.14.0,<2.0; extra == 'sim'",
-    "dm-control>=1.0.30,<2.0; extra == 'sim'",
-
-    # optional real
-    # some of the dependencies are only available for specific machine architectures.
-    # use pyrealsense2 beta package for Python 3.12 and above.
-    "pyrealsense2>=2.55.1,<3.0; python_version < '3.12' and platform_machine == 'x86_64' and extra == 'real'",
-    "pyrealsense2-beta==2.56.0.8430; python_version >= '3.12' and platform_machine == 'x86_64' and extra == 'real'",
-    "pyrobotiqgripper>=1.0.1; extra == 'real'",
-    "franky-panda; platform_machine == 'x86_64' and extra == 'real'",
-  
-    # optional audio
-    "openai>=1.64.0; extra == 'audio'",
-    "openai-whisper>=20240930; extra == 'audio'",
-    "sounddevice>=0.5.2; extra == 'audio'",
-
-    # optional usd
-    "usd-core>=23.5.0; extra == 'usd'",
+  "open3d==0.18.*; python_version < '3.10'",
+  "open3d>=0.18; python_version >= '3.10'",
 ]
 
 [project.optional-dependencies]
-sim = ["mujoco", "robot-descriptions", "dm-control"]
-real = [
-    "pyrobotiqgripper",
-    "franky-panda; platform_machine == 'x86_64'",
-    "pyrealsense2>=2.55.1; python_version<'3.12' and platform_machine=='x86_64'",
-    "pyrealsense2-beta==2.56.0.8430; python_version>='3.12' and platform_machine=='x86_64'",
+sim = [
+  "mujoco==3.3.7; python_version < '3.10'",
+  "mujoco>=3.3,<4.0; python_version >= '3.10'",
+  "robot-descriptions>=1.14.0,<2.0",
+  "dm-control>=1.0.30,<2.0",
 ]
 
-usd = ["usd-core", "mujoco", "robot-descriptions", "dm-control"]
-all = [
-      "pyrobotiqgripper",
-      "franky-panda; platform_machine == 'x86_64'",
-      "pyrealsense2>=2.55.1; python_version<'3.12' and platform_machine=='x86_64'",
-      "pyrealsense2-beta==2.56.0.8430; python_version>='3.12' and platform_machine=='x86_64'",
-       "mujoco", "robot-descriptions", "dm-control", "usd-core",
-       "zmq", "pyzmq", "psutil"]
-dev = ["sphinx", "toml", "myst-parser", "sphinx-rtd-theme", "sphinxcontrib-video", "black", "ruff"]
+real = [
+  "pyrobotiqgripper>=1.0.1",
+  "franky-panda; platform_machine == 'x86_64'",
+  "pyrealsense2>=2.55.1,<3.0; python_version < '3.12' and platform_machine == 'x86_64'",
+  "pyrealsense2-beta==2.56.0.8430; python_version >= '3.12' and platform_machine == 'x86_64'",
+]
+
+audio = [
+  "openai>=1.64.0",
+  "openai-whisper>=20240930",
+  "sounddevice>=0.5.2",
+]
+
+usd = [
+  "usd-core>=23.5.0",
+  "mujoco==3.3.7; python_version < '3.10'",
+  "mujoco>=3.3,<4.0; python_version >= '3.10'",
+  "robot-descriptions>=1.14.0,<2.0",
+  "dm-control>=1.0.30,<2.0",
+]
+
+remote = ["zmq", "pyzmq", "psutil"]
+
 ur = ["urx>=0.11.0"]
 xarm = ["xarm-python-sdk>=1.15.3"]
-remote = ["zmq", "pyzmq", "psutil"]
-audio = ["openai", "openai-whisper", "sounddevice"]
+
+dev = [
+  "sphinx",
+  "toml",
+  "myst-parser",
+  "sphinx-rtd-theme",
+  "sphinxcontrib-video",
+  "ruff",
+]
+
+all = [
+  # real
+  "pyrobotiqgripper>=1.0.1",
+  "franky-panda; platform_machine == 'x86_64'",
+  "pyrealsense2>=2.55.1,<3.0; python_version < '3.12' and platform_machine == 'x86_64'",
+  "pyrealsense2-beta==2.56.0.8430; python_version >= '3.12' and platform_machine == 'x86_64'",
+
+  # sim
+  "mujoco==3.3.7; python_version < '3.10'",
+  "mujoco>=3.3,<4.0; python_version >= '3.10'",
+  "robot-descriptions>=1.14.0,<2.0",
+  "dm-control>=1.0.30,<2.0",
+
+  # usd
+  "usd-core>=23.5.0",
+
+  # remote
+  "zmq",
+  "pyzmq",
+  "psutil",
+]
 
 [project.urls]
 homepage = "https://robits.ai"
