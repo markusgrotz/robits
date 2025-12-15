@@ -33,7 +33,9 @@ class MujocoEnv:
         """
 
         self.camera_names = env_designer.get_camera_names()
-        self.model = SceneBuilder().build()
+
+        blueprints = env_designer.finalize()
+        self.model = SceneBuilder().build_from_blueprints(blueprints.values())
 
         self.data = mujoco.MjData(self.model)
 

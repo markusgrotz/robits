@@ -2,6 +2,7 @@ from typing import List
 from typing import Dict
 
 from functools import lru_cache
+from dataclasses import replace
 
 import logging
 import json
@@ -10,7 +11,9 @@ from robits.sim.blueprints import Blueprint
 from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import GeomBlueprint
 from robits.sim.blueprints import Pose
+from robits.sim.blueprints import blueprints_from_json
 
+from robits.core.utils import MiscJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -27,20 +30,16 @@ class EnvDesigner:
         self.add_defaults()
 
     def to_json(self) -> str:
-        """
-        Serializes all blueprints to json
-        """
-        return json.dumps({"blueprints": [vars(b) for b in self.blueprints.values()]})
+        return json.dumps(
+            {"blueprints": [b for b in self.blueprints.values()]},
+            cls=MiscJSONEncoder,
+            indent=3,
+        )
 
     def from_json(self, json_string: str):
-        """
-        Load blueprints from json
-        """
-        json_data = json.loads(json_string)
         self.blueprints = {}
-        for b in json_data["blueprints"]:
-            raise NotImplementedError("not implemented yet")
-            # self.blueprints[blueprint.id] = blueprint
+        for bp in blueprints_from_json(json_string):
+            self.add(bp)
 
     def add_floor(self):
         """

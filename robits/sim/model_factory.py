@@ -16,26 +16,26 @@ from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import ObjectBlueprint
 from robits.sim.blueprints import MeshBlueprint
 from robits.sim.blueprints import GeomBlueprint
-from robits.sim.blueprints import Pose
-
-from robits.sim.env_design import env_designer
+from robits.sim.blueprints import Blueprint
 
 from robits.sim import utils
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_FREE_JOINT_QPOS = np.array([0., 0., 0., 1., 0., 0., 0.])
 
 class SceneBuilder:
 
-    def __init__(self):
+    def __init__(self, add_floor: bool=True):
         self.scene = mjcf.RootElement()
-        self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
-        self.add_default_assets()
+        #self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
+        self.scene.worldbody.add("light", pos="0 0 5")
+        self.key = self.scene.keyframe.add("key", name="home", qpos="", ctrl="")
+        if add_floor:
+            self.add_default_assets()
 
     def add_default_assets(self):
-        self.key = self.scene.keyframe.add("key", name="home", qpos="", ctrl="")
         self.scene.asset.add("material", name="groundplane")
-        self.scene.worldbody.add("light", pos="0 0 5")
         self.scene.worldbody.add(
             "geom",
             name="floor",
@@ -45,24 +45,28 @@ class SceneBuilder:
             rgba=[0.5, 0.5, 0.5, 1],
         )
         return self
-
-    def build(self) -> mujoco.MjModel:
+    
+    def build_from_blueprints(self, blueprints: Sequence[Blueprint]) -> mujoco.MjModel:
         """
         Creates a mujoco model from the blueprints
         """
-        blueprints = env_designer.finalize()
         logger.info("Building environment model: %s", blueprints)
+        bp_id_to_bp = {bp.id: bp for bp in blueprints}
 
-        # .. todo:: this ensures that the free joints are first
-        for b in blueprints.values():
-            if isinstance(b, (CameraBlueprint, ObjectBlueprint, GeomBlueprint)):
+        #  this ensures that the free joints are first
+        for b in blueprints:
+            if isinstance(
+                b, (MeshBlueprint, CameraBlueprint, ObjectBlueprint, GeomBlueprint)
+            ):
                 self.add(b)
 
-        for b in blueprints.values():
+        for b in blueprints:
             if isinstance(b, RobotBlueprint):
                 gripper_blueprint: Optional[GripperBlueprint] = None
                 if b.attachment:
-                    gripper_blueprint = blueprints.get(b.attachment.blueprint_id, None)
+                    gripper_blueprint = bp_id_to_bp.get(b.attachment.blueprint_id, None)
+                    if gripper_blueprint is None:
+                        logger.warning("Unable to find gripper blueprint with id %s.", b.attachment.blueprint_id)
                 self.add_robot(b, gripper_blueprint)
 
         self.merge_all_keyframes_into_home()
@@ -114,18 +118,14 @@ class SceneBuilder:
         self.set_pose(camera, blueprint.pose)
         return self
 
-    @add.register(GeomBlueprint)
+    @add.register
     def add_geom(self, blueprint: GeomBlueprint):
         if not blueprint.is_static:
             body = self.scene.worldbody.add("body", name=f"{blueprint.name}_body")
             joint = body.add("freejoint")
             joint.name = f"{blueprint.name}_joint"
-            # Set the position of the object via joints. Alternatively use joint_qpos = np.array([0., 0., 0., 1., 0., 0., 0.])
-            joint_qpos = np.concatenate(
-                [blueprint.pose.position, blueprint.pose.quaternion_wxyz], axis=None
-            )
             for k in self.scene.find_all("key"):
-                k.qpos = np.concatenate([k.qpos, joint_qpos], axis=None)
+                k.qpos = np.concatenate([k.qpos, DEFAULT_FREE_JOINT_QPOS], axis=None)
         else:
             body = self.scene.worldbody
         geom = body.add(
@@ -137,10 +137,13 @@ class SceneBuilder:
             rgba=blueprint.rgba,
         )
 
-        # set the pose for static objects
-        if blueprint.is_static:
-            self.set_pose(geom, blueprint.pose)
+        self.set_pose(geom, blueprint.pose)
+        return self    
 
+    def add_mocap(
+            self
+    ):
+        _mocap_body = self.scene.worldbody.add("body", name="target", mocap="true")
         return self
 
     def add_robot(
@@ -150,6 +153,9 @@ class SceneBuilder:
     ):
         logger.info("Building robot model for %s", blueprint.name)
         robot = utils.load_and_clean_model(blueprint.model)
+        
+        if blueprint.default_joint_positions:
+            utils.update_joint_position(robot, blueprint.default_joint_positions)
 
         for s in robot.find_all("site"):
             logger.info("Found site %s", s.name)
@@ -216,7 +222,7 @@ class SceneBuilder:
         )
         gripper_model.namescope.name = "gripper"
 
-        utils.merge_home_keys(arm_model, gripper_model)
+        #utils.merge_home_keys(arm_model, gripper_model)
 
         attachment_site = arm_model.worldbody.find(
             "site", attachment_blueprint.attachment_site
