@@ -27,8 +27,6 @@ class EnvDesigner:
         self.blueprints: Dict[str, Blueprint] = {}
         self.assembled = False
 
-        self.add_defaults()
-
     def to_json(self) -> str:
         return json.dumps(
             {"blueprints": [b for b in self.blueprints.values()]},
@@ -45,7 +43,6 @@ class EnvDesigner:
         """
         .. todo:: material is missing.
         """
-
         self.add(
             GeomBlueprint(
                 "floor",
@@ -56,11 +53,6 @@ class EnvDesigner:
                 is_static=True,
             )
         )
-
-    def add_defaults(self):
-        self.add_blocks()
-        # self.add_light()
-        # self.add_floor()
 
     def finalize(self) -> Dict[str, Blueprint]:
         """
@@ -74,6 +66,8 @@ class EnvDesigner:
         return self.blueprints
 
     def add(self, blueprint: Blueprint) -> "EnvDesigner":
+        """
+        """
         if self.assembled:
             raise RuntimeError("Environment already build.")
 
@@ -95,6 +89,9 @@ class EnvDesigner:
         ]
 
     def add_blocks(self):
+        """
+        Convenience function to add three different colored blocks
+        """
         blocks = [
             {
                 "name": "red_block",
@@ -120,6 +117,34 @@ class EnvDesigner:
                     name=block["name"], rgba=block["rgba"], pose=pose, size=size
                 )
             )
+
+    def remove(self, name: str) -> "EnvDesigner":
+        """
+        Deletes a blueprint. Does not work in the environemnt is already build
+
+        :param name: name of the blueprint to remove
+        """
+        if self.assembled:
+            raise RuntimeError("Environment already build.")
+        
+        self.blueprints.pop(name, None)
+
+        return self
+    
+
+    def update(self, blueprint: Blueprint, **changes):
+
+        if self.assembled:
+            raise RuntimeError("Environment already build.")
+        
+        if blueprint.id not in self.blueprints:
+            logger.error("Unable to update blueprint with id %s. Please use add first", blueprint.id)
+            return self
+        
+        self.blueprints[blueprint.id] = replace(self.blueprints[blueprint.id], **changes)
+
+        return self
+
 
     @classmethod
     @lru_cache(maxsize=1)
