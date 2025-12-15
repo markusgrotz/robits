@@ -161,7 +161,7 @@ Also consider citing additional resources if necessary (See [Acknowledgement](ht
 - Real robots and grippers
   - [libfranka](https://github.com/frankaemika/libfranka)
   - [Franky](https://github.com/TimSchneider42/franky)
-  - pyRobotiqGripper originally from [castetsb/pyRobotiqGripper](https://github.com/castetsb/pyRobotiqGripper)
+  - [pyRobotiqGripper](https://github.com/castetsb/pyRobotiqGripper)
   - [xArm Python SDK](https://github.com/xArm-Developer/xArm-Python-SDK)
   - [Python URx](https://github.com/SintefManufacturing/python-urx)
 - Simulation
