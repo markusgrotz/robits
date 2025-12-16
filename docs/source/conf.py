@@ -14,10 +14,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 pyproject = toml.load("../../pyproject.toml")
-version = pyproject["tool"]["poetry"]["version"]
+version = pyproject["project"]["version"]
 
 
-project = pyproject["tool"]["poetry"]["name"]
+project = pyproject["project"]["name"]
 copyright = "2025, Markus Grotz"
 author = "Markus Grotz"
 release = version
