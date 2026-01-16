@@ -1,0 +1,7 @@
+{
+    "camera_name": "webcam",
+    "width": 640,
+    "height": 480,
+    "hz": 30,
+    "class_path": "robits.real.webcam_camera.WebcamCamera"
+}

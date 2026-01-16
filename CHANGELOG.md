@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add support for webcams
 
 ## [0.6.0] - 
 
@@ -21,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Update pyrobotiqgripper dependency
  - Revised package release workflow
 
-## [0.5.1]
+## [0.5.1] - 2025-
 
  - Revised MuJoCo model_factory handling of objects with freejoints
  - Fix wrist camera extrinsics 
@@ -31,7 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Remove mamba from scripts
 
 
-## [0.5.0]
+## [0.5.0] - 2025-
+
  - Initial release
 
 
