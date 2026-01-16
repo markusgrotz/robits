@@ -7,7 +7,7 @@ requires-python = ">=3.9,<3.13"
 license = {file = "LICENSE.md"}
 keywords = ["robotics", "AI", "manipulation", "research", "perception", "control", "simulation"]
 authors = [
-  { name = "Markus Grotz", email = "grotz@uw.edu" }
+  { name = "Markus Grotz", email = "code@robits.ai" }
 ]
 classifiers = [
     "Development Status :: 4 - Beta", 
