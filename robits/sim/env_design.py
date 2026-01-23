@@ -10,6 +10,7 @@ import json
 from robits.sim.blueprints import Blueprint
 from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import GeomBlueprint
+from robits.sim.blueprints import BlueprintGroup
 from robits.sim.blueprints import Pose
 from robits.sim.blueprints import blueprints_from_json
 
@@ -71,13 +72,13 @@ class EnvDesigner:
         if self.assembled:
             raise RuntimeError("Environment already build.")
 
-        if blueprint.id in self.blueprints:
-            logger.error("Blueprint already added with id %s", blueprint.id)
+        if blueprint.name in self.blueprints:
+            logger.error("Blueprint already added with id %s", blueprint.name)
             return self
 
         logger.debug("Adding gripper blueprint %s", blueprint)
 
-        self.blueprints[blueprint.id] = blueprint
+        self.blueprints[blueprint.name] = blueprint
         return self
 
     def get_camera_names(self) -> List[str]:
@@ -137,11 +138,11 @@ class EnvDesigner:
         if self.assembled:
             raise RuntimeError("Environment already build.")
         
-        if blueprint.id not in self.blueprints:
-            logger.error("Unable to update blueprint with id %s. Please use add first", blueprint.id)
+        if blueprint.name not in self.blueprints:
+            logger.error("Unable to update blueprint with id %s. Please use add first", blueprint.name)
             return self
         
-        self.blueprints[blueprint.id] = replace(self.blueprints[blueprint.id], **changes)
+        self.blueprints[blueprint.name] = replace(self.blueprints[blueprint.name], **changes)
 
         return self
 
