@@ -43,7 +43,7 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         self._gripper_name = gripper_name
 
         description = RobotDescriptionModel(description_name, variant_name)
-        env_designer.add(GripperBlueprint(gripper_name, model=description))
+        env_designer.add(GripperBlueprint(f"/{gripper_name}", model=description))
 
     @property
     def gripper_name(self):

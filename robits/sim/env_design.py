@@ -46,7 +46,7 @@ class EnvDesigner:
         """
         self.add(
             GeomBlueprint(
-                "floor",
+                "/floor",
                 "plane",
                 Pose(),
                 size=[0, 0, 0.05],
@@ -72,13 +72,13 @@ class EnvDesigner:
         if self.assembled:
             raise RuntimeError("Environment already build.")
 
-        if blueprint.name in self.blueprints:
-            logger.error("Blueprint already added with id %s", blueprint.name)
+        if blueprint.path in self.blueprints:
+            logger.error("Blueprint already added with id %s", blueprint.path)
             return self
 
         logger.debug("Adding gripper blueprint %s", blueprint)
 
-        self.blueprints[blueprint.name] = blueprint
+        self.blueprints[blueprint.path] = blueprint
         return self
 
     def get_camera_names(self) -> List[str]:
@@ -86,7 +86,7 @@ class EnvDesigner:
         Returns the name of all cameras
         """
         return [
-            v.name for _, v in self.blueprints.items() if isinstance(v, CameraBlueprint)
+            v.basename for _, v in self.blueprints.items() if isinstance(v, CameraBlueprint)
         ]
 
     def add_blocks(self):
@@ -113,9 +113,11 @@ class EnvDesigner:
         for block in blocks:
             size = [0.02, 0.02, 0.02]
             pose = Pose().with_position(block["pose"])
+            group_name=f"/{block['name']}_body"
+            self.add(BlueprintGroup(path=group_name, pose=Pose()))
             self.add(
                 GeomBlueprint(
-                    name=block["name"], rgba=block["rgba"], pose=pose, size=size
+                    path=f"{group_name}/{block['name']}", rgba=block["rgba"], is_static=False, size=size, pose=pose,
                 )
             )
 
@@ -138,11 +140,11 @@ class EnvDesigner:
         if self.assembled:
             raise RuntimeError("Environment already build.")
         
-        if blueprint.name not in self.blueprints:
-            logger.error("Unable to update blueprint with id %s. Please use add first", blueprint.name)
+        if blueprint.path not in self.blueprints:
+            logger.error("Unable to update blueprint with id %s. Please use add first", blueprint.path)
             return self
         
-        self.blueprints[blueprint.name] = replace(self.blueprints[blueprint.name], **changes)
+        self.blueprints[blueprint.path] = replace(self.blueprints[blueprint.path], **changes)
 
         return self
 

@@ -28,11 +28,16 @@ class Blueprint(ABC):
     Simple data class to model elements in the environment
     """
 
-    name: str
+    path: str
 
     @property
-    def id(self) -> str:
-        return f"{self.__class__.__name__.lower()}_{self.name}"
+    def basename(self) -> str:
+        return self.path.rsplit("/", maxsplit=1)[-1]
+
+    @property
+    def parent_path(self) -> str:
+        parent_path = self.path.rsplit("/", maxsplit=1)[0]
+        return parent_path or "/"
 
     def to_dict(self) -> Dict:
         """
@@ -198,9 +203,9 @@ class RobotDescriptionModel:
 
 @dataclass(frozen=True)
 class Attachment:
+    """the path of the robot blueprint that we want to attach to"""
 
-    """the id of the blueprint that we want to attach"""
-    blueprint_id: str
+    gripper_path: str
 
     wrist_name: str
 

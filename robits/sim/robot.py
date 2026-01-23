@@ -65,9 +65,7 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
         else:
             self._robot_name = robot_name
 
-        if (
-            gripper
-        ):  # update the joint names of the gripper since it is attached to the robot
+        if gripper:
             prefix = side_name or robot_name
             gripper.joint_names = [f"{prefix}/{j}" for j in gripper.joint_names]
             gripper.actuator_names = [f"{prefix}/{a}" for a in gripper.actuator_names]
@@ -88,7 +86,7 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
                 wrist_pose = wrist_pose.with_position(np.fromstring(pos, sep=" "))
 
             attachment = Attachment(
-                blueprint_id=f"gripperblueprint_{gripper.gripper_name}",
+                gripper_path=f"/{gripper.gripper_name}",
                 wrist_name=kwargs.get("wrist_name", "wrist"),
                 wrist_pose=wrist_pose,
                 attachment_site=kwargs.get("attachment_site", "attachment_site"),
@@ -98,7 +96,8 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
         pose = Pose(self.transform_robot_to_world)
         env_designer.add(
             RobotBlueprint(
-                self._robot_name, model=description, pose=pose, attachment=attachment
+                f"/{self._robot_name}", model=description, pose=pose, attachment=attachment,
+                default_joint_positions=default_joint_positions
             )
         )
 
