@@ -138,3 +138,67 @@ def set_pose(element, pose: Optional[Pose] = None):
         element.euler = None
     element.pos = pose.position
     element.quat = pose.quaternion_wxyz
+
+
+def add_offset_pose(element: mjcf.Element, offset: Optional[Pose] = None):
+    if offset is None:
+        return
+
+    prev_pose = pose_from_element(element)
+    new_pose = Pose(prev_pose.matrix.dot(offset.matrix))
+    element.quat = None
+    element.axisangle = None
+    element.euler = None
+    element.pos = new_pose.position
+    element.quat = new_pose.quaternion_wxyz
+
+
+def pose_from_element(element: mjcf.Element) -> Pose:
+    pose = Pose()
+    if hasattr(element, "pos") and element.pos is not None:
+        pose = pose.with_position(element.pos)
+    if hasattr(element, "quat") and element.quat is not None:
+        pose = pose.with_quat_wxyz(element.quat)
+    elif hasattr(element, "xyaxes") and element.xyaxes is not None:
+        x = element.xyaxes[:3]
+        y = element.xyaxes[3:]
+        x = x / np.linalg.norm(x)
+        y = y / np.linalg.norm(y)
+        m = np.identity(4)
+        m[:3, 0] = x
+        m[:3, 1] = y
+        m[:3, 2] = np.cross(x, y)
+        if abs(np.linalg.det(m) - 1.0) > 1e-3:
+            logger.warning("Not a rotation matrix %s. Det is %f", m, np.linalg.det(m))
+            u, _s, vt = np.linalg.svd(m[:3, :3], full_matrices=True)
+            m[:3, :3] = u.dot(vt)
+            if np.linalg.det(m) < 1e-3:
+                u[:, -1] *= -1.0
+                m[:3, :3] = u.dot(vt)
+            logger.info("New rotation matrix is %s", m)
+        pose = Pose(m).with_position(pose.position)
+    elif hasattr(element, "euler") and element.euler is not None:
+        logger.warning(
+            "Not fully implemented. Check if there is a compile flag that specifies the units. Something like # <compiler angle=degree ..."
+        )
+        pose = pose.with_euler(element.euler, degrees=True)
+    return pose
+
+
+def set_object_pose(data: mujoco.MjData, object_name: str, pose: Pose, relative=False):
+    joint_name = f"{object_name}_joint"
+
+    joint_id = mujoco.mj_name2id(data.model, mujoco.mjtObj.mjOBJ_JOINT, joint_name)
+    if joint_id < 0:
+        raise ValueError(f"Joint '{joint_name}' not found")
+
+    qpos_adr = data.model.jnt_qposadr[joint_id]
+
+    pose_vec = np.concatenate([pose.position, pose.quaternion_wxyz])
+
+    if relative:
+        data.qpos[qpos_adr : qpos_adr + 7] += pose_vec
+    else:
+        data.qpos[qpos_adr : qpos_adr + 7] = pose_vec
+
+
