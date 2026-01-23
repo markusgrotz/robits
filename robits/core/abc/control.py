@@ -6,6 +6,7 @@ import logging
 import threading
 
 from enum import unique
+from enum import auto
 from robits.core.compat import StrEnum
 
 logger = logging.getLogger(__name__)
@@ -17,9 +18,9 @@ class ControlTypes(StrEnum):
     Class representing different types of control methods.
     """
 
-    position = "position"
-    cartesian = "cartesian"
-    motion_planning = "motion_planning"
+    position = auto()
+    cartesian = auto()
+    motion_planning = auto()
 
 
 control_types = ControlTypes

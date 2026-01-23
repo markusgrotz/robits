@@ -37,15 +37,6 @@ class RealsenseCamera(CameraBase):
     """
 
     @classmethod
-    def get_camera_type_name(cls) -> str:
-        """
-        Get the type name for this camera implementation.
-
-        :returns: The string identifier for RealSense cameras
-        """
-        return "realsense"
-
-    @classmethod
     def list_camera_info(cls) -> List[Tuple[str, str]]:
         """
         Get information about all connected RealSense cameras.
