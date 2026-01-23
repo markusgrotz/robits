@@ -41,7 +41,8 @@ class MujocoEnv:
 
         logger.info("Model timestep is %s", self.model.opt.timestep)
 
-        logger.info("resetting to first keyframe")
+        logger.info("Resetting to first keyframe")
+        
         mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
         mujoco.mj_forward(self.model, self.data)
 
@@ -58,16 +59,36 @@ class MujocoEnv:
 
         threading.Thread(target=self.sim_control_loop, daemon=True).start()
 
-    def get_joint_to_actuator_mapping(self, model) -> Dict[int, int]:
+    def get_joint_to_actuator_mapping(self, model: mujoco.MjModel) -> Dict[int, int]:
         """
         Generates a mapping from joint id to actuator id
 
         :param model: the mujoco model to build the mapping from
         """
         mapping: Dict[int, int] = {}
-        for i in range(model.nu):
+    
+        for i in range(model.nu): # number of actuators/controls = dim(ctrl)
+            
             actuator = model.actuator(i)
-            joint = model.joint(actuator.trnid[0])
+
+            if actuator.trntype[0] == mujoco.mjtTrn.mjTRN_JOINT:
+                joint = model.joint(actuator.trnid[0]) # actuator_trnid;   // transmission id: joint, tendon, site     (nu x 2)
+            elif actuator.trntype[0] in (mujoco.mjtTrn.mjTRN_SLIDERCRANK, mujoco.mjtTrn.mjTRN_TENDON):
+                logger.info("Using heuristic for different joint types, e.g. grippers. Searching by joint by name.")
+                prefix = actuator.name.rsplit("/", maxsplit=1)[0]
+                for j in range(model.njnt):
+                    joint_name = model.joint(j).name or ""
+                    if joint_name.startswith(prefix) and j not in mapping:
+                        logger.debug("Found joint by name %s -> %s.", actuator.name, joint_name)
+                        joint = model.joint(j)
+                        break
+                else:
+                    logger.error("Unable to find joint!")
+                    continue
+            else:
+                logger.warning("Unsupported actuator type %s", actuator)
+                continue
+
             logger.debug(
                 f"Actuator {model.actuator(i).name}: Connected to Joint {joint.name}"
             )
