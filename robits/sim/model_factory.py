@@ -29,11 +29,13 @@ from robits.sim import mjcf_utils
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_FREE_JOINT_QPOS = np.array([0., 0., 0., 1., 0., 0., 0.])
+# xyz + wxyz
+DEFAULT_FREE_JOINT_QPOS = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+
 
 class SceneBuilder:
 
-    def __init__(self, add_floor: bool=True):
+    def __init__(self, add_floor: bool = True):
         self.scene = mjcf.RootElement()
         #self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
         self.scene.worldbody.add("light", pos="0 0 5")
@@ -43,6 +45,8 @@ class SceneBuilder:
         # Map full blueprint path -> created MJCF element
         self.mapping: Dict[str, mjcf.Element] = {}
 
+    def export_with_assets(self, out_path: Path) -> None:
+        mjcf.export_with_assets(self.scene, out_path.parent, out_path.name)
 
     def get_parent(self, blueprint: Blueprint) -> mjcf.Element:
         if blueprint.parent_path == "/":
