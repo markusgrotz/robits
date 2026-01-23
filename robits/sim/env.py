@@ -115,7 +115,7 @@ class MujocoEnv:
 
         logger.info("Starting sim control loop")
 
-        with mujoco.viewer.launch_passive(model, data) as viewer, mujoco.Renderer(
+        with mujoco.viewer.launch_passive(model, data, show_left_ui=False, show_right_ui=False) as viewer, mujoco.Renderer(
             model, height=480, width=640
         ) as renderer:
             self.viewer = viewer
