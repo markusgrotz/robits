@@ -143,7 +143,6 @@ class CameraFactory(BaseFactory):
 
 
 class RobotFactory(BaseFactory):
-
     def __init__(self, config_name) -> None:
         super().__init__(ConfigTypes.robot, config_name)
 

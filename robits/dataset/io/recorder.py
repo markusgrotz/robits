@@ -129,7 +129,6 @@ class DatasetRecorder:
         logging.info("Starting recording.")
         self.timer.reset()
         while not self.is_stopped:
-
             proprioception = self.robot.get_proprioception_data(True, True)
             perception = self.robot.get_vision_data()
             self.robot.update_wrist_camera_extrinsics(proprioception, perception)

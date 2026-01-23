@@ -21,6 +21,7 @@ def shell(robot, c: str):
         exec(c)
 
     from IPython import embed
+
     embed()
 
 

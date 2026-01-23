@@ -56,7 +56,7 @@ def prompt_for_action(robot, action, use_hands=True, num_attempts=10):
         return
 
 
-def setup_cli(level: Union[str, int] = logging.INFO, force: bool=True):
+def setup_cli(level: Union[str, int] = logging.INFO, force: bool = True):
     log_config = {
         "handlers": [
             RichHandler(
@@ -66,7 +66,7 @@ def setup_cli(level: Union[str, int] = logging.INFO, force: bool=True):
         ]
     }
     logging.basicConfig(level=level, **log_config, force=force)
-    
+
     np.set_printoptions(precision=4, suppress=True)
 
     logger.info("Current package version is %s", __version__)

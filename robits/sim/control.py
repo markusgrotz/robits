@@ -142,9 +142,10 @@ class MujocoCartesianControl(ControllerBase, MujocoJointControlClient):
         if relative:
             site_id = self.site.id
 
-            robot_position, robot_matrix = self.data.site(site_id).xpos, self.data.site(
-                site_id
-            ).xmat.reshape((3, 3))
+            robot_position, robot_matrix = (
+                self.data.site(site_id).xpos,
+                self.data.site(site_id).xmat.reshape((3, 3)),
+            )
             robot_quaternion = R.from_matrix(robot_matrix).as_quat()
 
             robot_position, robot_quaternion = transform_pose(
@@ -255,7 +256,6 @@ class MujocoCartesianControl(ControllerBase, MujocoJointControlClient):
 
 
 class MujocoControlManager(ControlManager):
-
     def __init__(
         self,
         joint_names,

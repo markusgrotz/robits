@@ -13,14 +13,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class MelloConfig:
-
     max_delta: float = 0.25
 
     initial_joint_positions: Optional[np.ndarray] = None
 
 
 class MelloAgent:
-
     def __init__(self, device_addr, robot):
         self.device_addr = device_addr
         self.robot = robot

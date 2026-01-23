@@ -26,7 +26,6 @@ box_offset[:3, 3] = -box_length / 2
 @click.option("--show-visualization/--hide-visualization", is_flag=True, default=True)
 @click.option("--add-trajectory/--hide-trajectory", is_flag=True, default=True)
 def cli(input_path, show_visualization, add_trajectory):
-
     dataset = DatasetReader(Path(input_path)).load()
 
     camera_name = "front"
@@ -40,7 +39,6 @@ def cli(input_path, show_visualization, add_trajectory):
 
     # visualize trajectories
     if add_trajectory:
-
         for obs in dataset.entries:
             coordinate_system = o3d.geometry.TriangleMesh.create_coordinate_frame(
                 size=0.01, origin=[0, 0, 0]
@@ -50,7 +48,6 @@ def cli(input_path, show_visualization, add_trajectory):
 
     add_gripper_state = True
     if add_gripper_state:
-
         for obs in dataset.entries:
             gripper_box = o3d.geometry.TriangleMesh.create_box(**box_dim)
 
@@ -70,7 +67,6 @@ def cli(input_path, show_visualization, add_trajectory):
     entry = dataset.entries[0]
 
     class DatasetCamera:
-
         def __init__(self, camera_name, entry):
             self.entry = entry
             self.camera_name = camera_name
@@ -94,10 +90,8 @@ def cli(input_path, show_visualization, add_trajectory):
     visualization_data.append(pcd)
 
     if show_visualization:
-
         animate_pcd = True
         if animate_pcd:
-
             vis = o3d.visualization.Visualizer()
             vis.create_window(visible=True)
             for g in visualization_data:
@@ -105,9 +99,7 @@ def cli(input_path, show_visualization, add_trajectory):
                 vis.update_geometry(g)
 
             while True:
-
                 for entry in dataset.entries:
-
                     pcd_update = depth_to_pcd(
                         entry.camera_data[camera_name],
                         DatasetCamera(camera_name, entry),
@@ -127,7 +119,6 @@ def cli(input_path, show_visualization, add_trajectory):
             o3d.visualization.draw_geometries(visualization_data)
 
     else:
-
         vis = o3d.visualization.Visualizer()
         vis.create_window(visible=False)
         for g in visualization_data:

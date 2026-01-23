@@ -160,7 +160,7 @@ class ControlManager:
         controller_type: ControlTypes,
         reset_controller_config: bool = True,
         asynchronous: bool = False,
-        **kwargs
+        **kwargs,
     ) -> "ControlManager":
         """
         Activate a controller by type.
@@ -247,20 +247,17 @@ class BimanualControlManager(ControlManager):
         self.control_left = control_left
 
     def __call__(self, *args, **kwargs) -> "BimanualControlManager":
-
         self.control_right(*args, **kwargs)
         self.control_left(*args, **kwargs)
 
         return self
 
     def __enter__(self):
-
         right_ctrl = self.control_right.__enter__()
         left_ctrl = self.control_left.__enter__()
 
         class ControlDelegator(ControllerBase):
             def update(self, right, left, **kwargs):
-
                 right_thread = threading.Thread(
                     target=right_ctrl.update, args=(right,), kwargs=kwargs
                 )
@@ -272,7 +269,6 @@ class BimanualControlManager(ControlManager):
                 left_thread.start()
 
                 if not right_ctrl.asynchronous:
-
                     right_thread.join()
                     left_thread.join()
 

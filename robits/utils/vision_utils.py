@@ -106,7 +106,6 @@ def get_camera_data_resized(
     return new_camera_data, new_metadata
 
 
-
 def make_camera_intrinsics(fx: float, fy: float, width: int, height: int) -> np.ndarray:
     intrinsics = np.identity(3)
     intrinsics[0, 0] = fx
@@ -118,7 +117,7 @@ def make_camera_intrinsics(fx: float, fy: float, width: int, height: int) -> np.
 
 def intrinsics_from_fovy(fovy, width, height) -> np.ndarray:
     """
-    :param fovy: field of view in y-axis direction 
+    :param fovy: field of view in y-axis direction
     :param width: image width
     :param height: image height
     :return: intrinsic parameters

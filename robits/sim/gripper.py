@@ -31,7 +31,7 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         invert: bool = False,
         description_name: str = "",
         variant_name: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         :param gripper_name: name of the gripper in the model
@@ -52,7 +52,7 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         return self._gripper_name
 
     def open(self):
-        self.set_pos(np.ones(len(self.actuator_ids))) 
+        self.set_pos(np.ones(len(self.actuator_ids)))
 
     def close(self):
         self.set_pos(np.zeros(len(self.actuator_ids)))

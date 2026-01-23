@@ -91,7 +91,6 @@ def replay(robot, input_path, control_mode):
         raise ValueError("invalid control mode")
 
     with robot.control(control_mode, asynchronous=True) as ctrl:
-
         for entry in track(
             dataset.entries, console=console, description="Replaying data"
         ):

@@ -3,6 +3,7 @@
 """
 App for extrinsic calibration
 """
+
 import sys
 import os
 
@@ -33,7 +34,6 @@ from robits.utils import vision_utils
 
 
 class SimplePCDViewer:
-
     def __init__(self) -> None:
         self.viewer_running = True
         self.prev_transform = np.identity(4)
@@ -119,7 +119,6 @@ class SimplePCDViewer:
 
 
 class CameraCalibrationApp(App):
-
     def __init__(self, viewer: SimplePCDViewer):
         super().__init__()
         self.viewer = viewer
@@ -308,7 +307,6 @@ class CameraCalibrationApp(App):
         self.viewer.stop()
 
     def save_camera_calibration(self, selected_camera):
-
         if not selected_camera:
             return
 

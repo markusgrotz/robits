@@ -55,7 +55,7 @@ class Franka(UnimanualRobot):
         audio: Optional[AudioBase] = None,
         ip_addr: str = DEFAULT_ROBOT_IP_ADDR,
         dynamics_factor: float = 0.2,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize a Franka Panda robot controller.
@@ -131,7 +131,6 @@ class Franka(UnimanualRobot):
         obs["joint_forces"] = np.zeros_like(joint_state.position)
 
         if include_gripper_obs:
-
             if not self.gripper:
                 logger.warning("Gripper is not connected")
                 return obs

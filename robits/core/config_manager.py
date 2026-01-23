@@ -34,7 +34,6 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigFinder(ABC):
-
     @abstractmethod
     def find_config(self, config_name: str) -> Optional[Path]:
         """

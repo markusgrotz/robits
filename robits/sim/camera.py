@@ -20,6 +20,7 @@ DEFAULT_FOCAL_LENGTH = 579.4113
 
 logger = logging.getLogger(__name__)
 
+
 class MujocoCamera(CameraBase, MujocoEnvClient):
     """
     Implements a camera in Mujoco
@@ -36,8 +37,12 @@ class MujocoCamera(CameraBase, MujocoEnvClient):
         self._camera_name = camera_name
         self.width = width
         self.height = height
-        self._intrinsics = make_camera_intrinsics(DEFAULT_FOCAL_LENGTH, DEFAULT_FOCAL_LENGTH, width, height)
-        env_designer.add(CameraBlueprint(f"/{camera_name}", width, height, self._intrinsics))
+        self._intrinsics = make_camera_intrinsics(
+            DEFAULT_FOCAL_LENGTH, DEFAULT_FOCAL_LENGTH, width, height
+        )
+        env_designer.add(
+            CameraBlueprint(f"/{camera_name}", width, height, self._intrinsics)
+        )
 
     @property
     def camera_name(self) -> str:

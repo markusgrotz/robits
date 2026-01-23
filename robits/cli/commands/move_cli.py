@@ -131,7 +131,6 @@ def test(robot):
     ]
 
     with robot.control(control_types.cartesian) as ctrl:
-
         ctrl.update((np.array([0.0, 0.0, 0.2]), [0, 0, 0, 1]), relative=True)
 
         for i in range(5):

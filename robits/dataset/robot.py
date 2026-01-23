@@ -35,7 +35,7 @@ class DatasetRobot(UnimanualRobot):
         self,
         cameras: Optional[Union[List[CameraBase], List[str]]] = None,
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Initialize the DatasetRobot.

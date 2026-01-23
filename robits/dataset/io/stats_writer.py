@@ -45,7 +45,6 @@ class StatsWriter:
 
         data = []
         for entry in self.dataset.entries:
-
             row = {"seq": entry.seq}
             gripper_pose = entry.proprioception["gripper_pose"]
             if isinstance(gripper_pose, tuple):

@@ -17,7 +17,6 @@ def check_bounds():
     def decorator(func: Callable):
         @wraps(func)
         def wrapper(self, action, **kwargs):
-
             # min_bounds = np.array([0.2, -0.4, 0.41])
             min_bounds = np.array([0.2, -0.4, 0.30])
             max_bounds = np.array([0.62, 0.4, 0.70])
@@ -73,7 +72,6 @@ class NumpyJSONEncoder(json.JSONEncoder):
 
 
 class MiscJSONEncoder(NumpyJSONEncoder):
-
     def default(self, obj):
         if hasattr(obj, "to_dict") and callable(obj.to_dict):
             return obj.to_dict()

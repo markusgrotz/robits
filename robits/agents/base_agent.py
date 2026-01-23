@@ -17,7 +17,6 @@ class BaseAgent(ABC):
     lang_goal: str
 
     def prepare_observation(self, obs, i, episode_length):
-
         from clip import tokenize
         import torch
 

@@ -20,7 +20,6 @@ def cli():
 @cli.command()
 @choice_option("--robot-name", type=click.Choice(config_manager.available_robots))
 def prompt(robot_name):
-
     robot = RobotFactory().build_robot(robot_name)
 
     camera = robot.cameras[0]

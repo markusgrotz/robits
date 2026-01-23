@@ -19,15 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 def timed_cache(time_delta=0.5):
-
     def decorator(func):
-
         start_time = time.monotonic()
         previous_value = None
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-
             nonlocal start_time
             nonlocal previous_value
 
@@ -45,7 +42,6 @@ def timed_cache(time_delta=0.5):
 
 
 class FrankaGripper(GripperBase):
-
     def __init__(self, gripper_name: str, **kwargs):
         """
         Initializes the gripper
@@ -140,6 +136,6 @@ class FrankaGripper(GripperBase):
         with self.lock:
             self.last_cmd_timestamp = time.time()
             # .. todo:: reset the width value
-            #self.normalized_width.cache_clear()
+            # self.normalized_width.cache_clear()
             unnormalized_pos = pos * self.max_joint_position
             self.gripper.move(unnormalized_pos, speed=self.config["speed"])

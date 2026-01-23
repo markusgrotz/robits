@@ -45,4 +45,3 @@ def mat2pose(mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     position = mat[:3, 3]
     quaternion = R.from_matrix(mat[:3, :3]).as_quat()
     return position, quaternion
-

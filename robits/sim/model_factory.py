@@ -34,10 +34,9 @@ DEFAULT_FREE_JOINT_QPOS = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
 
 
 class SceneBuilder:
-
     def __init__(self, add_floor: bool = True):
         self.scene = mjcf.RootElement()
-        #self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
+        # self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
         self.scene.worldbody.add("light", pos="0 0 5")
         self.key = self.scene.keyframe.add("key", name="home", qpos="", ctrl="")
         if add_floor:
@@ -256,7 +255,6 @@ class SceneBuilder:
         robot = self.scene.attach(robot)
         mjcf_utils.add_offset_pose(robot, blueprint.pose)
         return self
-
 
     def merge_all_keyframes_into_home(self):
         qpos = []

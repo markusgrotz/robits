@@ -73,7 +73,6 @@ class RobotiqGripper(GripperBase):
         return "robotiq"
 
     def read_calibration(self):
-
         calibration_data = {
             "ratio_a": self.gripper._aCoef,
             "ratio_b": self.gripper._bCoef,
@@ -94,7 +93,6 @@ class RobotiqGripper(GripperBase):
         }
 
     def load_calibration(self):
-
         # we still need to call gripper.activate()
 
         calibration_data = {
@@ -141,17 +139,15 @@ class RobotiqGripper(GripperBase):
                 return 0.0
             position_in_mm = self.gripper.getPositionmm()
         return self._normalize_value(position_in_mm)
-    
+
     def get_pos_raw(self) -> float:
         with self.lock:
             return self.gripper.getPositionmm()
-    
+
     def _normalize_value(self, value):
         min_value = self.gripper.closemm
         max_value = self.gripper.openmm
-        return  (value - min_value) / (
-            max_value - min_value
-        )
+        return (value - min_value) / (max_value - min_value)
 
     def _unnormalize_value(self, value):
         min_value = self.gripper.closemm
@@ -171,10 +167,9 @@ class RobotiqGripper(GripperBase):
         return self.normalized_width > 0.5
 
     def set_pos(self, normalized_pos):
-        """
-        """
+        """ """
         clamped = max(0.0, min(1.0, normalized_pos))
         with self.lock:
             pos_bit = int(clamped * 255)
             self.gripper.goTo(pos_bit)
-            #self.gripper.goTomm
+            # self.gripper.goTomm

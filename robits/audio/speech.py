@@ -20,7 +20,6 @@ def get_default_player_backend():
 
 
 class CmdAudioPlayer:
-
     commands = {"mplayer": "mplayer %INPUT_FILE%", "afplay": "afplay %INPUT_FILE%"}
 
     def __init__(self, backend=None, **kwargs):
@@ -38,7 +37,6 @@ class CmdAudioPlayer:
 
 
 class CmdSpeech(SpeechBase):
-
     commands = {"espeak": "espeak"}
 
     def __init__(self, backend: str, **kwargs):
@@ -52,7 +50,6 @@ class CmdSpeech(SpeechBase):
 
 
 class CoquiTTS(SpeechBase):
-
     def __init__(self, output_backend: Optional[str] = None, **kwargs):
         from TTS.api import TTS
 
@@ -73,7 +70,6 @@ class CoquiTTS(SpeechBase):
 
 
 class OpenAIAPI(SpeechBase):
-
     def __init__(self, output_backend: Optional[str] = None, **kwargs):
         from openai import OpenAI
 

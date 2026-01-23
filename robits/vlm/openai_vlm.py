@@ -10,7 +10,6 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 
 class PromptBuilder:
-
     def __init__(self):
         self.content = []
 
@@ -19,7 +18,6 @@ class PromptBuilder:
         return self
 
     def add_image(self, np_image: np.ndarray, resize=False):
-
         image = Image.fromarray(np_image)
 
         if resize:
@@ -58,12 +56,12 @@ class ChatGPT:
         self.client = OpenAI()
 
     def query(self, prompt) -> ChatCompletion:
-
         if isinstance(prompt, PromptBuilder):
             prompt = prompt.build()
 
         response = self.client.chat.completions.create(
-            model="gpt-5.2", messages=[prompt]#, max_tokens=300
+            model="gpt-5.2",
+            messages=[prompt],  # , max_tokens=300
         )
 
         return response

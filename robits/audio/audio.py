@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class CmdAudioRecorder(RecorderBase):
-
     commands = {
         "pulse": "parecord --file-format=wav %OUTPUT_FILE%",
         "alsa": "arecord --format=cd %OUTPUT_FILE%",
@@ -81,7 +80,6 @@ class SdAudioRecorder(RecorderBase):
 
 
 class OpenAIWhisper(AudioBase):
-
     def __init__(self, recorder_type: str = "sd", **kwargs):
         import whisper
 

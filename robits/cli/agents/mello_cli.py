@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 @cli_options.robot()
 # @filepath_option("--output-path", default="/tmp/test")
 def cli(device_addr, robot):
-
     agent = MelloAgent(device_addr, robot)
 
     robot.control.move_home()

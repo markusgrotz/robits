@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class SceneVisualizer:
-
     def __init__(self, robot):
         self.robot = robot
 
@@ -40,7 +39,6 @@ class SceneVisualizer:
         self.show()
 
     def show(self):
-
         if self.is_running:
             logger.warning("Already running")
             return
@@ -78,7 +76,6 @@ class SceneVisualizer:
         self.thread.start()
 
     def update_scene(self, camera_data=None, camera=None):
-
         data = {}
         if camera_data:
             pcd = vision_utils.depth_to_pcd(camera_data, camera, apply_extrinsics=True)
@@ -123,7 +120,6 @@ class SceneVisualizer:
             vis.update_renderer()
 
             if not self.visible:
-
                 view_control = vis.get_view_control()
 
                 # copied from the viewer

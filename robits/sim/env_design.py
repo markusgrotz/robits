@@ -67,8 +67,7 @@ class EnvDesigner:
         return self.blueprints
 
     def add(self, blueprint: Blueprint) -> "EnvDesigner":
-        """
-        """
+        """ """
         if self.assembled:
             raise RuntimeError("Environment already build.")
 
@@ -86,7 +85,9 @@ class EnvDesigner:
         Returns the name of all cameras
         """
         return [
-            v.basename for _, v in self.blueprints.items() if isinstance(v, CameraBlueprint)
+            v.basename
+            for _, v in self.blueprints.items()
+            if isinstance(v, CameraBlueprint)
         ]
 
     def add_blocks(self):
@@ -113,11 +114,15 @@ class EnvDesigner:
         for block in blocks:
             size = [0.02, 0.02, 0.02]
             pose = Pose().with_position(block["pose"])
-            group_name=f"/{block['name']}_body"
+            group_name = f"/{block['name']}_body"
             self.add(BlueprintGroup(path=group_name, pose=Pose()))
             self.add(
                 GeomBlueprint(
-                    path=f"{group_name}/{block['name']}", rgba=block["rgba"], is_static=False, size=size, pose=pose,
+                    path=f"{group_name}/{block['name']}",
+                    rgba=block["rgba"],
+                    is_static=False,
+                    size=size,
+                    pose=pose,
                 )
             )
 
@@ -129,25 +134,27 @@ class EnvDesigner:
         """
         if self.assembled:
             raise RuntimeError("Environment already build.")
-        
+
         self.blueprints.pop(name, None)
 
         return self
-    
 
     def update(self, blueprint: Blueprint, **changes):
-
         if self.assembled:
             raise RuntimeError("Environment already build.")
-        
+
         if blueprint.path not in self.blueprints:
-            logger.error("Unable to update blueprint with id %s. Please use add first", blueprint.path)
+            logger.error(
+                "Unable to update blueprint with id %s. Please use add first",
+                blueprint.path,
+            )
             return self
-        
-        self.blueprints[blueprint.path] = replace(self.blueprints[blueprint.path], **changes)
+
+        self.blueprints[blueprint.path] = replace(
+            self.blueprints[blueprint.path], **changes
+        )
 
         return self
-
 
     @classmethod
     @lru_cache(maxsize=1)

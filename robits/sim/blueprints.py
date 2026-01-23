@@ -240,7 +240,10 @@ def convert_json_to_bp(data: Any) -> Blueprint:
             module_name, class_name = obj["class_path"].rsplit(".", 1)
             if not module_name == "robits.sim.blueprints":
                 import logging
-                logging.getLogger(__name__).error("Invalid module name %s in json data.", module_name)
+
+                logging.getLogger(__name__).error(
+                    "Invalid module name %s in json data.", module_name
+                )
 
             module = importlib.import_module(module_name)
             cls = getattr(module, class_name)

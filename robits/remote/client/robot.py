@@ -13,7 +13,6 @@ from robits.core.abc.control import ControlTypes
 
 
 class RemoteController(ControllerBase):
-
     def __init__(self, client, controller_type: ControlTypes):
         self.client = client
         self.controller_type = controller_type
@@ -25,7 +24,6 @@ class RemoteController(ControllerBase):
 
 
 class RemoteControlManager(ControlManager):
-
     def __init__(self, client):
         self.client = client
         self.controller_type = None

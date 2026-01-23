@@ -174,7 +174,9 @@ def list():
             table.add_row("pyrealsense2", name, serial_number)
 
     except ModuleNotFoundError:
-        console.print("Unable to find realsense library. Please check your installation")
+        console.print(
+            "Unable to find realsense library. Please check your installation"
+        )
 
     try:
         from robits.real.webcam_camera import WebcamCamera
@@ -200,7 +202,6 @@ def hz(camera_name):
 
     try:
         while True:
-
             start_time = time.time()
             camera.get_camera_data()
             elapsed_time = time.time() - start_time
@@ -292,9 +293,7 @@ def view(camera_name):
     ax[1].title.set_text("Depth")
 
     try:
-
         while fig is not None:
-
             # Draw the figure with the images.
             plt.pause(0.01)
             plt.draw()

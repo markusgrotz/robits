@@ -20,7 +20,7 @@ def robot(*args, **kwargs):
             type=click.Choice(config_manager.available_robots),
             help="Name of the robot configuration",
             *args,
-            **kwargs
+            **kwargs,
         )(f)
 
     return decorator

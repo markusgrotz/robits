@@ -42,7 +42,6 @@ class GripperBase(ABC):
         """
         raise NotImplementedError("Not implemented yet")
 
-
     @abstractmethod
     def is_open(self) -> bool:
         """

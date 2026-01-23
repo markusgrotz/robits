@@ -58,7 +58,6 @@ class MujocoEnvClient:
 
 
 class MujocoJointControlClient(MujocoEnvClient):
-
     def __init__(
         self, joint_names: List[str], actuator_names: Optional[List[str]] = None
     ):

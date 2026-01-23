@@ -2,6 +2,7 @@
 Requires pip install imageio[ffmpeg]
 
 """
+
 from typing import Any
 from typing import Dict
 from typing import Tuple
@@ -20,6 +21,7 @@ from robits.utils import vision_utils
 
 
 logger = logging.getLogger(__name__)
+
 
 class WebcamCamera(CameraBase):
     """
@@ -49,8 +51,9 @@ class WebcamCamera(CameraBase):
         self._iter = iio.imiter(self.source)
         self._seq = 0
 
-        logger.warning("Unused parameter hz %d. Setting the fps is currently not supported.", hz)
-
+        logger.warning(
+            "Unused parameter hz %d. Setting the fps is currently not supported.", hz
+        )
 
     @classmethod
     def list_camera_info(cls) -> List[Tuple[str, str]]:
@@ -80,10 +83,16 @@ class WebcamCamera(CameraBase):
             frame = frame.astype(np.uint8)
 
         h, w = frame.shape[:2]
-        
+
         if self.width != w or self.height != h:
             if self._seq == 0:
-                logger.warning("Image resolution differs from actual resoluation. Expected %d x %d. Actual %d x %d", self.width, self.height, w, h)
+                logger.warning(
+                    "Image resolution differs from actual resoluation. Expected %d x %d. Actual %d x %d",
+                    self.width,
+                    self.height,
+                    w,
+                    h,
+                )
             frame = np.resize(frame, (self.height, self.width, 3))
 
         depth = np.zeros((h, w), dtype=np.float32)
@@ -121,4 +130,3 @@ class WebcamCamera(CameraBase):
     def __del__(self) -> None:
         # The iterator will close its resources on GC; nothing explicit to do.
         self._iter = None  # type: ignore[assignment]
-

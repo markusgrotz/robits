@@ -75,7 +75,6 @@ class FrankaWebClient:
         return response
 
     def lock_brakes(self):
-
         logger.info("Locking robot brakes.")
 
         self.client.request(

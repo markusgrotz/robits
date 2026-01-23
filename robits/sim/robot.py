@@ -96,8 +96,11 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
         pose = Pose(self.transform_robot_to_world)
         env_designer.add(
             RobotBlueprint(
-                f"/{self._robot_name}", model=description, pose=pose, attachment=attachment,
-                default_joint_positions=default_joint_positions
+                f"/{self._robot_name}",
+                model=description,
+                pose=pose,
+                attachment=attachment,
+                default_joint_positions=default_joint_positions,
             )
         )
 

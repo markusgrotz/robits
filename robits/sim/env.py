@@ -42,7 +42,7 @@ class MujocoEnv:
         logger.info("Model timestep is %s", self.model.opt.timestep)
 
         logger.info("Resetting to first keyframe")
-        
+
         mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
         mujoco.mj_forward(self.model, self.data)
 
@@ -66,20 +66,28 @@ class MujocoEnv:
         :param model: the mujoco model to build the mapping from
         """
         mapping: Dict[int, int] = {}
-    
-        for i in range(model.nu): # number of actuators/controls = dim(ctrl)
-            
+
+        for i in range(model.nu):  # number of actuators/controls = dim(ctrl)
             actuator = model.actuator(i)
 
             if actuator.trntype[0] == mujoco.mjtTrn.mjTRN_JOINT:
-                joint = model.joint(actuator.trnid[0]) # actuator_trnid;   // transmission id: joint, tendon, site     (nu x 2)
-            elif actuator.trntype[0] in (mujoco.mjtTrn.mjTRN_SLIDERCRANK, mujoco.mjtTrn.mjTRN_TENDON):
-                logger.info("Using heuristic for different joint types, e.g. grippers. Searching by joint by name.")
+                joint = model.joint(
+                    actuator.trnid[0]
+                )  # actuator_trnid;   // transmission id: joint, tendon, site     (nu x 2)
+            elif actuator.trntype[0] in (
+                mujoco.mjtTrn.mjTRN_SLIDERCRANK,
+                mujoco.mjtTrn.mjTRN_TENDON,
+            ):
+                logger.info(
+                    "Using heuristic for different joint types, e.g. grippers. Searching by joint by name."
+                )
                 prefix = actuator.name.rsplit("/", maxsplit=1)[0]
                 for j in range(model.njnt):
                     joint_name = model.joint(j).name or ""
                     if joint_name.startswith(prefix) and j not in mapping:
-                        logger.debug("Found joint by name %s -> %s.", actuator.name, joint_name)
+                        logger.debug(
+                            "Found joint by name %s -> %s.", actuator.name, joint_name
+                        )
                         joint = model.joint(j)
                         break
                 else:
@@ -115,16 +123,19 @@ class MujocoEnv:
 
         logger.info("Starting sim control loop")
 
-        with mujoco.viewer.launch_passive(model, data, show_left_ui=False, show_right_ui=False) as viewer, mujoco.Renderer(
-            model, height=480, width=640
-        ) as renderer:
+        with (
+            mujoco.viewer.launch_passive(
+                model, data, show_left_ui=False, show_right_ui=False
+            ) as viewer,
+            mujoco.Renderer(model, height=480, width=640) as renderer,
+        ):
             self.viewer = viewer
             while viewer.is_running():
                 mujoco.mj_step(model, data)
 
                 self.last_step = time.monotonic()
                 viewer.sync()
-                                
+
                 self.render_cameras(renderer)
 
                 # reset the cache
@@ -145,7 +156,6 @@ class MujocoEnv:
         new_camera_data = {}
         metadata = {"timestamp": time.time(), "seq": self.seq}
         for camera_name in self.camera_names:
-
             renderer.disable_depth_rendering()
             renderer.update_scene(self.data, camera=camera_name)
             rgb_image = renderer.render()
@@ -166,12 +176,11 @@ class MujocoEnv:
         Returns the number of free joint in the model
         """
         return sum(self.model.jnt_type == mujoco.mjtJoint.mjJNT_FREE)
-    
 
     @lru_cache(maxsize=1)
     def get_scene_info(self) -> Dict[str, Dict[str, Any]]:
         """
-        Gets the current information about objects in the scene. 
+        Gets the current information about objects in the scene.
         An object is defined as geom element, whose parent bodies have a free
         joint.
         The result of this function is cached but resetted after each
@@ -182,12 +191,14 @@ class MujocoEnv:
         data = {}
 
         for i in range(self.model.ngeom):
-
             geom_body_id = self.model.geom_bodyid[i]
 
             # Check if the body has a freejoint
             for j in range(self.model.njnt):
-                if self.model.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE and self.model.jnt_bodyid[j] == geom_body_id:
+                if (
+                    self.model.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE
+                    and self.model.jnt_bodyid[j] == geom_body_id
+                ):
                     break
             else:
                 continue
@@ -205,12 +216,11 @@ class MujocoEnv:
                 "name": name,
                 "position": obj_data.xpos,
                 "quaternion": q,
-                #"size": obj_model.size,
-                #"friction": obj_model.friction,
-                #"rgba": obj_model.rgba,
+                # "size": obj_model.size,
+                # "friction": obj_model.friction,
+                # "rgba": obj_model.rgba,
             }
         return data
-
 
     @lru_cache(maxsize=1)
     def get_collisions(self) -> List[Set[str]]:
