@@ -194,7 +194,7 @@ class MujocoEnv:
 
             # ..todo:: extract..
             obj_body = self.model.body(geom_body_id)
-            obj_model = self.model.geom(i)
+            # obj_model = self.model.geom(i)
             obj_data = self.data.geom(i)
             name = obj_body.name
             mat = obj_data.xmat.reshape(3, 3)
