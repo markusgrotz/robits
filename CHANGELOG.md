@@ -7,7 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
--
+## [0.7.1] - 2026-01-23
+
+- Add robits.sim.converters module
+- Format code and clean up
+
+## [0.7.0] - 2026-01-23
+
+- Switch to hierarchical scene Blueprints with path-based grouping and parent lookup.
+- Use Blueprint basename as MJCF element name for lookup instead of id.
+- Add Pose composition operator (@) with stricter validation and accessors.
+- Add pose helpers in robits.sim.mjcf_utils: set_pose, add_offset_pose, pose_from_element, set_object_pose, get_home_key_qpos.
+- GeomBlueprint: add mass field; auto-wrap non-static geoms and add a freejoint when needed.
+- SceneBuilder: add export_with_assets(...); merge all keyframes into home.
+- Update Attachment: gripper_path/wrist_name/attachment_offset and standardized attachment_site.
+- sim.env: more robust joint-to-actuator mapping across slidercrank/tendon transmissions.
+- sim.env: revise get_scene_info() to return pose info and cache per step.
+- MuJoCo viewer: hide left/right panels when launching the window.
+- MuJoCo grippers: fix open/close handling for multi-actuator grippers.
+- Internal: rename robits.sim.utils to robits.sim.mjcf_utils and refactor usages.
+- Update CI workflow and drop Python 3.9 from version matrix 
 
 ## [0.6.1] - 2026-01-23
 
@@ -46,7 +65,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release history
 
-[Unreleased]: https://github.com/markusgrotz/robits/compare/v0.7.0...HEAD
+
+[Unreleased]: https://github.com/markusgrotz/robits/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/markusgrotz/robits/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/markusgrotz/robits/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/markusgrotz/robits/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/markusgrotz/robits/compare/v0.5.2...v0.6.0
