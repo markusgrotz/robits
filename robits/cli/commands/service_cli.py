@@ -28,7 +28,7 @@ available_services = config_manager.list()
 @cli.group()
 def service():
     """
-    Commands related to starting/stoping a service
+    Commands related to starting/stopping a service
 
     This command group provides operations for interacting with a service.
     A service is, for example, a remote instance running on a different machine.

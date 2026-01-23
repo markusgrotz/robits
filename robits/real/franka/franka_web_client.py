@@ -59,7 +59,7 @@ class FrankaWebClient:
         self.client.close()
 
     def unlock_brakes(self):
-        logger.info("Unlocking robot breaks.")
+        logger.info("Unlocking robot brakes.")
         self.client.request(
             "POST",
             "/desk/api/robot/open-brakes",
@@ -70,13 +70,13 @@ class FrankaWebClient:
         )
         response = self.client.getresponse().read()
 
-        logger.info("Reponse is %s", response)
+        logger.info("Response is %s", response)
 
         return response
 
     def lock_brakes(self):
 
-        logger.info("Locking robot breaks.")
+        logger.info("Locking robot brakes.")
 
         self.client.request(
             "POST",
@@ -89,6 +89,6 @@ class FrankaWebClient:
 
         response = self.client.getresponse().read()
 
-        logger.info("Reponse is %s", response)
+        logger.info("Response is %s", response)
 
         return response

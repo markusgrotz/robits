@@ -200,7 +200,7 @@ def hz(camera_name):
             hz = 1.0 / average
 
             console.print(
-                f"Took {measured_times[-1]:.4f} seconds. Average is {average:.4f} seconds. {hz:.2f} fp/s"
+                f"Took {measured_times[-1]:.4f} seconds. Average is {average:.4f} seconds. {hz:.2f} fps"
             )
 
     except KeyboardInterrupt:

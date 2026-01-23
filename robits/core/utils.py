@@ -90,14 +90,14 @@ class FrequencyTimer:
 
     def reset(self):
         """
-        Resests the last cycle
+        Resets the last cycle
         """
         self.last_cycle = time.perf_counter()
 
     def wait_for_cycle(self):
         """
         Waits for the remaining period time.
-        First  cycle is skipped if ..func::reset hasn't been called.
+        First cycle is skipped if reset() hasn't been called.
         """
         if not self.last_cycle:
             self.last_cycle = time.perf_counter()

@@ -24,8 +24,8 @@ entry point in your shell. Here are some examples:
    # Closing the gripper
    rb gripper close
 
-   # Opening the robotiq gripper as specified in the gripper_robotiq_real config
-   rb gripper open --griper-name gripper_robotiq_real
+   # Opening the Robotiq gripper as specified in the gripper_robotiq_real config
+   rb gripper open --gripper-name gripper_robotiq_real
 
    # Showing available RealSense cameras
    rb camera list
@@ -59,10 +59,9 @@ robot's coordinate system.
 Shell integration
 -----------------
 
-You can direclty interact with the robot using ``rb shell``. To launch a Mujoco simulation with the panda use ``rb shell --robot robot_panda_sim`` or ``export ROBITS_DEFAULT_ROBOT=robot_panda_sim``.
-Note that for Mujoco simulation the environemnt is built once you interact with it. Just access ``robot.env`` in the Ipython shell to trigger a build of the environment.
-Next paste the following to pick up a the blue block:
+You can directly interact with the robot using ``rb shell``. To launch a MuJoCo simulation with the Panda use ``rb shell --robot robot_panda_sim`` or ``export ROBITS_DEFAULT_ROBOT=robot_panda_sim``.
+Note that for MuJoCo simulation the environment is built once you interact with it. Just access ``robot.env`` in the IPython shell to trigger a build of the environment.
+Next paste the following to pick up the blue block:
 
 
 .. code-block:: python
-

@@ -15,7 +15,7 @@ def panda():
 @panda.command()
 def unlock():
     """
-    Unlocks the breaks
+    Unlocks the brakes
     """
     from robits.real.franka.franka_web_client import FrankaWebClient
 
@@ -36,7 +36,7 @@ def unlock():
 @panda.command()
 def lock():
     """
-    Locks the breaks
+    Locks the brakes
     """
     from robits.real.franka.franka_web_client import FrankaWebClient
 

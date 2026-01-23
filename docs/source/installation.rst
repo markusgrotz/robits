@@ -32,6 +32,23 @@ installation options. Currently, the following options are available:
 
 
 
+Using uv
+--------
+
+If you use `uv <https://github.com/astral-sh/uv>`_, you can create and sync the environment from ``pyproject.toml`` and run the CLI without activating a shell manually.
+
+.. code-block:: bash
+
+   # Sync the environment with simulation extras
+   uv sync --extra sim
+
+   # Show CLI help through uv
+   uv run rb --help
+
+   # Move the simulated robot to its home position
+   uv run rb move home --robot-name robot_panda_sim
+
+
 Development
 -----------
 
