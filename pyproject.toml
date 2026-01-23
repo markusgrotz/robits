@@ -3,7 +3,7 @@ name = "robits"
 version = "0.6.0"
 description = "Lightweight, modular, and scalable software stack for AI-driven robotic manipulation."
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.13"
 license = {file = "LICENSE.md"}
 keywords = ["robotics", "AI", "manipulation", "research", "perception", "control", "simulation"]
 authors = [
@@ -12,7 +12,6 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta", 
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -36,15 +35,12 @@ dependencies = [
   "click-prompt>=0.6.0",
   "textual>=1.0.0,<2.0.0",
   "textual-slider>=0.1.2,<0.2.0",
-
-  "open3d==0.18.*; python_version < '3.10'",
-  "open3d>=0.18; python_version >= '3.10'",
+  "open3d>=0.18",
 ]
 
 [project.optional-dependencies]
 sim = [
-  "mujoco==3.3.7; python_version < '3.10'",
-  "mujoco>=3.3,<4.0; python_version >= '3.10'",
+  "mujoco>=3.3,<4.0",
   "robot-descriptions>=1.14.0,<2.0",
   "dm-control>=1.0.30,<2.0",
 ]
@@ -64,8 +60,7 @@ audio = [
 
 usd = [
   "usd-core>=23.5.0",
-  "mujoco==3.3.7; python_version < '3.10'",
-  "mujoco>=3.3,<4.0; python_version >= '3.10'",
+  "mujoco>=3.3,<4.0",
   "robot-descriptions>=1.14.0,<2.0",
   "dm-control>=1.0.30,<2.0",
 ]
