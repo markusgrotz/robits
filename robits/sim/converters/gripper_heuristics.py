@@ -3,11 +3,15 @@ from typing import List
 from abc import ABC
 from abc import abstractmethod
 
+import logging
+
 from dm_control import mjcf
 
 from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import Attachment
 from robits.sim.blueprints import RobotDescriptionModel
+
+logger = logging.getLogger(__name__)
 
 
 class GripperHeuristic(ABC):
@@ -70,4 +74,6 @@ class RobotiqHeuristic(GripperHeuristic):
 
 
 def get_all_gripper_heuristics_classes() -> List[type[GripperHeuristic]]:
-    return [RobotiqHeuristic, PandaHeuristic]
+    logger.warning("Not fully implemented yet. Only Robotiq grippers are supported.")
+
+    return [RobotiqHeuristic]
