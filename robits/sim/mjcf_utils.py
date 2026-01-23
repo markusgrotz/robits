@@ -1,5 +1,6 @@
 from typing import Optional
 from typing import Sequence
+from typing import List
 
 import os
 from importlib import import_module
@@ -17,18 +18,42 @@ from robits.sim.blueprints import Pose
 logger = logging.getLogger(__name__)
 
 
+DUMMY_MODEL = mjcf.from_xml_string(
+    '<mujoco><worldbody><body><geom type="box" rgba="1 0 0 1" size="0.5 0.5 0.5"/></body></worldbody></mujoco>'
+)
+
+
 def load_and_clean_model(blueprint: RobotDescriptionModel):
     model = load_model_from_blueprint(blueprint)
     remove_invalid_joints(model)
     remove_non_home_key(model)
-    ensure_existing_home_key(model)
+    try:
+        ensure_existing_home_key(model)
+    except ValueError as e:
+        logger.error(
+            "Something went wrong while adding a homekey. Using simple heuristic.",
+            exc_info=e,
+        )
+        k = model.keyframe.add("key", name="home")
+        k.ctrl = np.zeros(len(model.find_all("actuator")))
+        k.qpos = np.zeros(len(model.find_all("joint")))
     return model
 
+
 def reload_model_with_assets(model):
-    return mujoco.MjModel.from_xml_string(model.to_xml_string(), model.get_assets())
+    try:
+        return mujoco.MjModel.from_xml_string(model.to_xml_string(), model.get_assets())
+    except ValueError as ex:
+        logger.error("Unable to reload model: %s", model, exc_info=ex)
+        return model
+
 
 def load_model_from_path(path_name, escape_separators=False):
-    return mjcf.from_path(path_name, escape_separators)
+    try:
+        return mjcf.from_path(path_name, escape_separators)
+    except Exception as ex:  # (FileNotFoundError, AttributeError, ValueError) as ex:
+        logger.error("Unable to load model from path %s", path_name, exc_info=ex)
+        return DUMMY_MODEL
 
 
 def load_model_from_blueprint(blueprint: RobotDescriptionModel):
@@ -55,27 +80,39 @@ def load_model_from_robot_descriptions(
     model_path = module.MJCF_PATH
     if variant_name:
         model_path = os.path.join(os.path.dirname(model_path), variant_name)
-
     logger.debug("Model path is %s", model_path)
-    return mjcf.from_path(model_path, escape_separators=False)
+    return load_model_from_path(model_path, True)
 
 
 def remove_invalid_joints(model):
     for j in model.find_all("joint"):
-        if j.name is None or j.name == "floating_base_joint" or j.name == "freejoint":
-            logger.warning("Removing invalid joint from model. Parent is %s", j.parent)
+        # or j.name == "floating_base_joint" or j.name == "freejoint" or
+        if j.name is None or is_freejoint(j):
+            logger.warning("Removing joint %s. Parent is %s", j.name, j.parent)
             for k in model.find_all("key"):
                 k.qpos = k.qpos[7:]
             j.remove()
 
-# can this be replaced?
+
+def has_freejoint(element: mjcf.Element) -> bool:
+    for j in element.find_all("joint", immediate_children_only=True):
+        if is_freejoint(j):
+            return True
+    return False
+
+
+def is_freejoint(j: mjcf.Element) -> bool:
+    if getattr(j, "tag", None) == "freejoint" or getattr(j, "type", None) == "free":
+        return True
+    return False
+
+
 def merge_home_keys(arm_model, gripper_model):
     # merges the home key of the arm and the gripper
     # see `https://github.com/google-deepmind/mujoco_menagerie/blob/main/FAQ.md`
     arm_key = arm_model.find("key", "home")
     if arm_key:
         gripper_key = gripper_model.find("key", "home")
-
         if gripper_key is None:
             physics = mjcf.Physics.from_mjcf_model(gripper_model)
             arm_key.ctrl = np.concatenate([arm_key.ctrl, np.zeros(physics.model.nu)])
@@ -89,17 +126,15 @@ def merge_home_keys(arm_model, gripper_model):
 
 
 def ensure_existing_home_key(model):
-    physics = mjcf.Physics.from_mjcf_model(model)
     for k in model.find_all("key"):
         if hasattr(k, "name") and k.name == "home":
             return model
-    logger.error(
-        "Unable to find a home key for model %s. Manually adding one", model
-    )
+    logger.warning("Unable to find a home key for model %s. Manually adding one", model)
+    # this might fail, e.g. for panda_nohand.xml
+    physics = mjcf.Physics.from_mjcf_model(model)
     k = model.keyframe.add("key", name="home")
     k.ctrl = np.zeros(physics.model.nu)
     k.qpos = np.zeros(physics.model.nq)
-
     return model
 
 
@@ -108,34 +143,54 @@ def remove_non_home_key(model):
         if not hasattr(k, "name") or k.name is None:
             logger.warning("Removing invalid key. Reason key has no name")
             k.remove()
-        elif "home" not in k.name:
+        elif k.name != "home":
             logger.warning("Removing non home key with name %s", k.name)
             k.remove()
     return model
 
+
 def update_joint_position(model, new_joint_position: Sequence[float]):
     q_len = len(new_joint_position)
     for k in model.find_all("key"):
+        max_len = min(len(k.ctrl), q_len)
         if len(k.ctrl) != q_len:
-            logger.warning("Joint has %s invalid length. Expected %d was %d.", k, q_len, len(k.ctrl))
-        k.qpos[:q_len] = np.asarray(new_joint_position)
-        k.ctrl[:q_len] = np.asarray(new_joint_position)
+            logger.error(
+                "Key %s has invalid length. Expected %d, but key has %d values.",
+                k,
+                q_len,
+                len(k.ctrl),
+            )
+            logger.error("model is %s", model)
+            # continue
+        k.qpos[:max_len] = np.asarray(new_joint_position)[:max_len]
+        k.ctrl[:max_len] = np.asarray(new_joint_position)[:max_len]
 
-def set_pose(element, pose: Optional[Pose] = None):
+
+def set_pose(element: mjcf.Element, pose: Optional[Pose] = None):
+    """
+    .. seealso:: :func:`add_offset_pose`
+    """
     if pose is None:
         return
+
     if (
         element.quat is not None
         or element.euler is not None
         or element.axisangle is not None
     ):
-        logger.error(
-            "Element orientation already set for element %s. Discarding stored information.",
+        logger.warning(
+            "Element orientation already set for element %s. Overwriting previous orientation",
             element,
         )
         element.quat = None
         element.axisangle = None
         element.euler = None
+    if hasattr(element, "pos") and element.pos is not None:
+        logger.warning(
+            "Element position already set for element %s. Overwriting previous position.",
+            element,
+        )
+
     element.pos = pose.position
     element.quat = pose.quaternion_wxyz
 
@@ -202,3 +257,11 @@ def set_object_pose(data: mujoco.MjData, object_name: str, pose: Pose, relative=
         data.qpos[qpos_adr : qpos_adr + 7] = pose_vec
 
 
+def get_home_key_qpos(root: mjcf.RootElement) -> List[float]:
+    if not hasattr(root, "keyframe"):
+        logger.warning("Unable to find a home keyframe.")
+        return []
+    for key in root.keyframe.find_all("key"):
+        if key.name == "home":
+            return key.qpos.tolist()
+    return []
