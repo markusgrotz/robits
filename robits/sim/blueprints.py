@@ -6,6 +6,7 @@ from typing import Any
 from typing import Sequence
 from typing import Dict
 from typing import List
+from typing import Union
 
 from abc import ABC
 import importlib
@@ -58,47 +59,64 @@ class Pose:
 
     matrix: np.ndarray = field(default_factory=lambda: np.identity(4))
 
+    def __matmul__(self, other: "Pose"):
+        """
+        Compose two poses using matrix multiplication.
+
+        Returns a new Pose representing `self.matrix @ other.matrix`.
+        """
+        if not isinstance(other, Pose):
+            raise TypeError(
+                f"Unsupported operand type for @: Expected 'Pose', actual is '{type(other).__name__}'"
+            )
+        return Pose(self.matrix.dot(other.matrix))
+
     def with_position(self, new_position: Sequence[float]):
+        assert len(new_position) == 3
         new_matrix = self.matrix.copy()
         new_matrix[:3, 3] = np.asarray(new_position, dtype=float)
         return replace(self, matrix=new_matrix)
 
-    def with_quat(self, new_quat: Sequence[float]):
+    def with_quat(self, new_quat: Union[Sequence[float], np.ndarray]):
         new_matrix = self.matrix.copy()
         new_matrix[:3, :3] = R.from_quat(new_quat).as_matrix()
         return replace(self, matrix=new_matrix)
-    
+
     def with_quat_wxyz(self, new_quat: Sequence[float]):
+        assert len(new_quat) == 4
         return self.with_quat(np.concatenate((new_quat[1:], new_quat[:1])))
-    
+
     def with_euler(self, new_euler: Sequence[float], degrees=False):
         new_matrix = self.matrix.copy()
-        new_matrix[:3, :3] = R.from_euler('XYZ', new_euler, degrees).as_matrix()
+        new_matrix[:3, :3] = R.from_euler("XYZ", new_euler, degrees).as_matrix()
         return replace(self, matrix=new_matrix)
-    
+
     @property
-    def position(self):
+    def position(self) -> np.ndarray:
         return self.matrix[:3, 3]
 
     @property
-    def quaternion(self):
+    def quaternion(self) -> np.ndarray:
         return R.from_matrix(self.matrix[:3, :3]).as_quat()
 
     @property
-    def quaternion_wxyz(self):
+    def quaternion_wxyz(self) -> np.ndarray:
         # scalar_first is only available in SciPy >= 1.4. Which does not work for Python 3.9
         q = R.from_matrix(self.matrix[:3, :3]).as_quat()
         return np.concatenate((q[-1:], q[:-1]))
 
     @property
-    def euler(self):
+    def euler(self) -> np.ndarray:
         return R.from_matrix(self.matrix[:3, :3]).as_euler(seq="XYZ")
 
     def __post_init__(self):
         if self.matrix.shape != (4, 4):
-            raise ValueError("pose must be a 4x4 transformation matrix")
+            raise ValueError("Pose must be a 4x4 transformation matrix")
 
-    def to_dict(self) -> Dict:
+        if not np.isclose(np.linalg.det(self.matrix[:3, :3]), 1.0):
+            raise ValueError("Not a rotation matrix. Determinant does not equal 1.")
+
+    def to_dict(self) -> List[float]:
         return self.matrix.tolist()
 
 @dataclass(frozen=True)
@@ -120,7 +138,7 @@ class CameraBlueprint(Blueprint):
         if self.pose is None:
             return np.identity(4)
         return np.linalg.inv(self.pose.matrix)
-    
+
 
 @dataclass(frozen=True)
 class BlueprintGroup(Blueprint):
@@ -140,6 +158,8 @@ class GeomBlueprint(Blueprint):
     rgba: Optional[Sequence[float]] = None
 
     is_static: bool = False
+
+    mass: float = 0.2
 
 
 @dataclass(frozen=True)
@@ -210,6 +230,9 @@ class GripperBlueprint(Blueprint):
 
 
 def convert_json_to_bp(data: Any) -> Blueprint:
+    """
+    .. seealso:: Blueprint.to_json
+    """
 
     def _build(obj: Any) -> Any:
         if isinstance(obj, list):
@@ -226,7 +249,11 @@ def convert_json_to_bp(data: Any) -> Blueprint:
             for f in dc_fields(cls):
                 if f.name in obj:
                     val = _build(obj[f.name])
-                    if cls is Pose and f.name == "matrix" and not isinstance(val, np.ndarray):
+                    if (
+                        cls is Pose
+                        and f.name == "matrix"
+                        and not isinstance(val, np.ndarray)
+                    ):
                         val = np.asarray(val, dtype=float)
                     kwargs[f.name] = val
             return cls(**kwargs)
