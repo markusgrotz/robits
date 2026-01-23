@@ -2,8 +2,8 @@
 
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/robits)](https://pypi.org/project/robits/) 
 [![PyPI version](https://img.shields.io/pypi/v/robits)](https://pypi.org/project/robits/) 
-[![License](https://img.shields.io/pypi/l/robits)](https://github.com/markusgrotz/robits/LICENSE.md)
-[![Code style](https://img.shields.io/badge/code%20style-black-black)](https://black.readthedocs.io/en/stable/)
+[![License](https://img.shields.io/pypi/l/robits)](https://github.com/markusgrotz/robits/blob/main/LICENSE.md)
+[![Code style](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Docs](https://readthedocs.org/projects/robits/badge/?version=latest)](https://robits.readthedocs.io/en/latest/)
 
 ## `from robits import ♥`
@@ -47,7 +47,7 @@ Once you have installed `RoBits` you can access the CLI with `rb` in your shell:
                                                                                 
 ╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --verbose  -v  INTEGER RANGE  Increase verbosity of the logging output. Can  │
-│                               base used multiple times                       │
+│                               be used multiple times                         │
 │ --quiet    -q                 Suppress all logging output except critical    │
 │                               and error messages                             │
 │ --help                        Show this message and exit.                    │
@@ -81,7 +81,7 @@ to your `.bashrc`.
 This allows you to specify additional configurations for robots, cameras,
 grippers.  For example, you can change the serial number of the camera or the
 ip address of a robot.
-Once you set your user confiuration folder you can copy and modify an existing configuration with:
+Once you set your user configuration folder you can copy and modify an existing configuration with:
 ```bash
 rb config copy
 ```
@@ -141,7 +141,7 @@ with robot.control(control_types.cartesian) as ctrl:
     robot.gripper.close()
 ```
 
-See the [Documentation](https://robits.readthedocs.io/en/latest/exampels.html) for more details, such as command line integration, and for more examples.
+See the [Documentation](https://robits.readthedocs.io/en/latest/examples.html) for more details, such as command line integration, and for more examples.
 
 
 ## Libraries Acknowledgement
