@@ -114,3 +114,14 @@ def make_camera_intrinsics(fx: float, fy: float, width: int, height: int) -> np.
     intrinsics[0, 2] = width / 2.0
     intrinsics[1, 2] = height / 2.0
     return intrinsics
+
+
+def intrinsics_from_fovy(fovy, width, height) -> np.ndarray:
+    """
+    :param fovy: field of view in y-axis direction 
+    :param width: image width
+    :param height: image height
+    :return: intrinsic parameters
+    """
+    focal_length = (height / 2) / np.tan(fovy / 2.0)
+    return make_camera_intrinsics(focal_length, focal_length, width, height)
