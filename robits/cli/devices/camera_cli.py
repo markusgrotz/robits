@@ -163,9 +163,9 @@ def list():
 
     table = Table(title="Cameras")
 
-    table.add_column("Library", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Module", justify="right", style="cyan", no_wrap=True)
     table.add_column("Name", style="magenta")
-    table.add_column("Serial number", justify="right", style="green")
+    table.add_column("Serial number \n or device ID", justify="right", style="green")
 
     try:
         from robits.real.realsense_camera import RealsenseCamera
@@ -174,7 +174,16 @@ def list():
             table.add_row("pyrealsense2", name, serial_number)
 
     except ModuleNotFoundError:
-        console.print("Unable to find realsense library. Please check the installation")
+        console.print("Unable to find realsense library. Please check your installation")
+
+    try:
+        from robits.real.webcam_camera import WebcamCamera
+
+        for name, uri in WebcamCamera.list_camera_info():
+            table.add_row("webcam", name, uri)
+
+    except ModuleNotFoundError:
+        console.print("Unable to find the webcam module.")
 
     console.print(table)
 
