@@ -143,7 +143,8 @@ class RobotiqGripper(GripperBase):
         return self._normalize_value(position_in_mm)
     
     def get_pos_raw(self) -> float:
-        return self.gripper.getPositionmm()
+        with self.lock:
+            return self.gripper.getPositionmm()
     
     def _normalize_value(self, value):
         min_value = self.gripper.closemm
