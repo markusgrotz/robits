@@ -35,7 +35,7 @@ class MujocoEnv:
         self.camera_names = env_designer.get_camera_names()
 
         blueprints = env_designer.finalize()
-        self.model = SceneBuilder().build_from_blueprints(blueprints.values())
+        self.model = SceneBuilder(False).build_from_blueprints(blueprints.values())
 
         self.data = mujoco.MjData(self.model)
 
@@ -121,10 +121,11 @@ class MujocoEnv:
             self.viewer = viewer
             while viewer.is_running():
                 mujoco.mj_step(model, data)
+
                 self.last_step = time.monotonic()
                 viewer.sync()
+                                
                 self.render_cameras(renderer)
-                # time.sleep(0.002)
 
                 # reset the cache
                 self.get_collisions.cache_clear()
@@ -142,7 +143,6 @@ class MujocoEnv:
         # mujoco.mj_forward(self.model, self.data)
 
         new_camera_data = {}
-        # since we control the step function in the simulation we can set it to a single timestamp.
         metadata = {"timestamp": time.time(), "seq": self.seq}
         for camera_name in self.camera_names:
 
@@ -180,22 +180,23 @@ class MujocoEnv:
         :returns: information, such as pose, about objects in the scene
         """
         data = {}
+
         for i in range(self.model.ngeom):
+
             geom_body_id = self.model.geom_bodyid[i]
+
             # Check if the body has a freejoint
-            has_freejoint = False
             for j in range(self.model.njnt):
                 if self.model.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE and self.model.jnt_bodyid[j] == geom_body_id:
-                    has_freejoint = True
                     break
-
-            if not has_freejoint:
+            else:
                 continue
 
             # ..todo:: extract..
+            obj_body = self.model.body(geom_body_id)
             obj_model = self.model.geom(i)
             obj_data = self.data.geom(i)
-            name = obj_data.name
+            name = obj_body.name
             mat = obj_data.xmat.reshape(3, 3)
             q = R.from_matrix(mat).as_quat()
 
@@ -204,9 +205,9 @@ class MujocoEnv:
                 "name": name,
                 "position": obj_data.xpos,
                 "quaternion": q,
-                "size": obj_model.size,
-                "friction": obj_model.friction,
-                "rgba": obj_model.rgba,
+                #"size": obj_model.size,
+                #"friction": obj_model.friction,
+                #"rgba": obj_model.rgba,
             }
         return data
 
