@@ -21,7 +21,6 @@
     ],
     "gripper": "gripper_robotiq_sim",
     "camera": "camera_front_sim",
-
     "description_name": "panda_mj_description",
-    "wrist_name": "hand"
+    "variant_name": "panda_nohand.xml"
 }
