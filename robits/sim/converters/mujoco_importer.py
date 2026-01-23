@@ -135,7 +135,7 @@ class MujocoXMLImporter:
                 geom_bp = self.parse_geom_tag(geom, is_static, self.asset_dir)
                 parent_name = body_to_fullname.get(body_element, None)
                 full_name = _join_full_name(parent_name, geom_bp.path)
-                geom_bp = replace(geom_bp, name=full_name)
+                geom_bp = replace(geom_bp, path=full_name)
                 blueprints.append(geom_bp)
 
             if bp := self.extract_robot_bp(body_element, joint_positions):
@@ -150,7 +150,7 @@ class MujocoXMLImporter:
                     # Ensure gripper has a normalized full name at root for now
                     gripper_path = _join_full_name(bp.path, gripper_bp.path)
                     gripper_path = _normalize_full_name(gripper_path)
-                    gripper_bp = replace(gripper_bp, name=gripper_path)
+                    gripper_bp = replace(gripper_bp, path=gripper_path)
                     blueprints.append(gripper_bp)
                     attachment = replace(attachment, gripper_path=gripper_path)
                     bp = replace(bp, attachment=attachment)
