@@ -6,6 +6,8 @@ from typing import List
 import time
 import logging
 
+import numpy as np
+
 from robits.core.abc.gripper import GripperBase
 from robits.sim.env_client import MujocoJointControlClient
 from robits.sim.env_design import env_designer
@@ -50,10 +52,10 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         return self._gripper_name
 
     def open(self):
-        self.set_pos(1.0)
+        self.set_pos(np.ones(len(self.actuator_ids))) 
 
     def close(self):
-        self.set_pos(0.0)
+        self.set_pos(np.zeros(len(self.actuator_ids)))
 
     def get_obs(self) -> Dict[str, Any]:
         qpos = self.data.qpos[self.joint_ids].copy()
@@ -75,9 +77,6 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         else:
             qpos = self._unnormalize(pos)
         self.data.ctrl[self.actuator_ids] = qpos
-
-    # def set_pos(self, pos):
-    #    self.data.ctrl[self.actuator_ids] = self._unnormalize(pos)
 
     def get_info(self):
         return {
