@@ -88,7 +88,7 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
             attachment = Attachment(
                 gripper_path=f"/{gripper.gripper_name}",
                 wrist_name=kwargs.get("wrist_name", "wrist"),
-                wrist_pose=wrist_pose,
+                attachment_offset=wrist_pose,
                 attachment_site=kwargs.get("attachment_site", "attachment_site"),
             )
 

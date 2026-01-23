@@ -1,6 +1,7 @@
 """
 Class that contains blueprints for the scene such as robots and objects
 """
+
 from typing import Optional
 from typing import Any
 from typing import Sequence
@@ -43,6 +44,7 @@ class Blueprint(ABC):
         """
         Serialize this blueprint (and nested dataclasses) to a plain dict.
         """
+
         def _convert(obj):
             if is_dataclass(obj):
                 cls = obj.__class__
@@ -61,7 +63,6 @@ class Blueprint(ABC):
 
 @dataclass(frozen=True)
 class Pose:
-
     matrix: np.ndarray = field(default_factory=lambda: np.identity(4))
 
     def __matmul__(self, other: "Pose"):
@@ -124,9 +125,9 @@ class Pose:
     def to_dict(self) -> List[float]:
         return self.matrix.tolist()
 
+
 @dataclass(frozen=True)
 class CameraBlueprint(Blueprint):
-
     width: int
 
     height: int
@@ -147,19 +148,17 @@ class CameraBlueprint(Blueprint):
 
 @dataclass(frozen=True)
 class BlueprintGroup(Blueprint):
-
     pose: Optional[Pose] = None
-    
+
 
 @dataclass(frozen=True)
 class GeomBlueprint(Blueprint):
-
     geom_type: str = "box"
 
     pose: Optional[Pose] = None
 
     size: Sequence[float] = field(default_factory=lambda: [0.02, 0.02, 0.02])
-    
+
     rgba: Optional[Sequence[float]] = None
 
     is_static: bool = False
@@ -169,7 +168,6 @@ class GeomBlueprint(Blueprint):
 
 @dataclass(frozen=True)
 class MeshBlueprint(Blueprint):
-
     mesh_path: str
 
     pose: Optional[Pose] = None
@@ -181,7 +179,6 @@ class MeshBlueprint(Blueprint):
 
 @dataclass(frozen=True)
 class ObjectBlueprint(Blueprint):
-
     model_path: str
 
     pose: Optional[Pose] = None
@@ -193,7 +190,6 @@ class ObjectBlueprint(Blueprint):
 
 @dataclass(frozen=True)
 class RobotDescriptionModel:
-
     description_name: str
 
     variant_name: Optional[str] = None
@@ -207,16 +203,15 @@ class Attachment:
 
     gripper_path: str
 
-    wrist_name: str
+    wrist_name: Optional[str] = None
 
-    wrist_pose: Optional[Pose] = None
+    attachment_offset: Optional[Pose] = None
 
     attachment_site: str = "attachment_site"
 
 
 @dataclass(frozen=True)
 class RobotBlueprint(Blueprint):
-
     model: RobotDescriptionModel
 
     pose: Optional[Pose] = None
@@ -228,10 +223,9 @@ class RobotBlueprint(Blueprint):
 
 @dataclass(frozen=True)
 class GripperBlueprint(Blueprint):
-
     model: RobotDescriptionModel
 
-    # delta_offset: Optional[Pose] = None
+    default_joint_positions: Optional[Sequence[float]] = None
 
 
 def convert_json_to_bp(data: Any) -> Blueprint:
