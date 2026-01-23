@@ -18,7 +18,7 @@ from robits.sim.blueprints import MeshBlueprint
 from robits.sim.blueprints import GeomBlueprint
 from robits.sim.blueprints import Blueprint
 
-from robits.sim import utils
+from robits.sim import mjcf_ as utils
 
 logger = logging.getLogger(__name__)
 
