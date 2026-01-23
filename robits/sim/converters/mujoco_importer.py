@@ -20,7 +20,6 @@ from robits.sim.blueprints import RobotBlueprint
 from robits.sim.blueprints import MeshBlueprint
 from robits.sim.blueprints import Pose
 from robits.sim.blueprints import Attachment
-from robits.sim.blueprints import RobotDescriptionModel
 from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import BlueprintGroup
@@ -111,7 +110,7 @@ class MujocoXMLImporter:
                 is_static = False
                 free_joint_body_elements.append(body_element)
                 if len(joint_positions) >= FREE_JOINT_LEN:
-                    keyframe_pose = pose_from_home_key(joint_positions[:FREE_JOINT_LEN])
+                    # keyframe_pose = pose_from_home_key(joint_positions[:FREE_JOINT_LEN])
                     # we need to include the joint position pose into the current pose as the blueprint does not cover this concept
                     # pose = Pose(pose.matrix.dot(keyframe_pose.matrix))
                     joint_positions = joint_positions[FREE_JOINT_LEN:]

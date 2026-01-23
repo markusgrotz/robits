@@ -1,6 +1,5 @@
-from typing import List
 from typing import Tuple
-
+from typing import List
 from abc import ABC
 from abc import abstractmethod
 
@@ -8,10 +7,7 @@ from dm_control import mjcf
 
 from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import Attachment
-
 from robits.sim.blueprints import RobotDescriptionModel
-
-from robits.sim import mjcf_utils
 
 
 class GripperHeuristic(ABC):
@@ -20,13 +16,11 @@ class GripperHeuristic(ABC):
         self.joint_positions = joint_positions
 
     def to_blueprint(self) -> Tuple[Attachment, GripperBlueprint]:
-        pose = mjcf_utils.pose_from_element(self.element)
-        name = f"/{self.element.name}"
-
         default_joint_positions = self.joint_positions[: self.num_joints]
         gripper_bp = GripperBlueprint(
             "/gripper",  # will be fixed later
             self.model(),
+            default_joint_positions=default_joint_positions,
         )
         attachment = Attachment("/gripper", "")
         return (attachment, gripper_bp)
