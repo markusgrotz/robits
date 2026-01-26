@@ -133,29 +133,32 @@ class MujocoXMLImporter:
             for geom in body_element.find_all("geom", immediate_children_only=True):
                 logger.info("Parsing %s", geom)
                 geom_bp = self.parse_geom_tag(geom, is_static, self.asset_dir)
-                parent_name = body_to_fullname.get(body_element, None)
-                full_name = _join_full_name(parent_name, geom_bp.path)
-                geom_bp = replace(geom_bp, path=full_name)
-                blueprints.append(geom_bp)
+                if geom_bp:
+                    parent_name = body_to_fullname.get(body_element, None)
+                    full_name = _join_full_name(parent_name, geom_bp.path)
+                    geom_bp = replace(geom_bp, path=full_name)
+                    blueprints.append(geom_bp)
 
             if bp := self.extract_robot_bp(body_element, joint_positions):
                 for b in body_element.find_all("body"):
                     visited_body_elements.add(b)
                 num_joints = len(bp.default_joint_positions)
                 joint_positions = joint_positions[num_joints:]
-                gripper_info = self.extract_gripper_bp(body_element)
+                gripper_info = self.extract_gripper_bp(body_element, joint_positions)
 
                 if gripper_info is not None:
                     attachment, gripper_bp = gripper_info
                     # Ensure gripper has a normalized full name at root for now
                     gripper_path = _join_full_name(bp.path, gripper_bp.path)
                     gripper_path = _normalize_full_name(gripper_path)
+                    num_joints = len(gripper_bp.default_joint_positions)
+                    joint_positions = joint_positions[num_joints:]
                     gripper_bp = replace(gripper_bp, path=gripper_path)
                     blueprints.append(gripper_bp)
                     attachment = replace(attachment, gripper_path=gripper_path)
                     bp = replace(bp, attachment=attachment)
 
-                bp = replace(bp, name=_normalize_full_name(bp.path))
+                bp = replace(bp, path=_normalize_full_name(bp.path))
                 blueprints.append(bp)
 
         return blueprints
@@ -210,7 +213,14 @@ class MujocoXMLImporter:
 
             return MeshBlueprint(name, mesh_path, pose, is_static, scale)
 
-        else:
+        elif geom_type in (
+            "plane",
+            "box",
+            "sphere",
+            "cylinder",
+            "capsule",
+            "ellipsoid",
+        ):
             logger.debug("Geom: %s", geom)
 
             if geom.size is not None:
@@ -238,14 +248,16 @@ class MujocoXMLImporter:
 
             logger.debug("Size: %s, RGBA: %s", size, rgba)
             return GeomBlueprint(name, geom_type, pose, size, rgba, is_static)
+        else:
+            logger.error("Unable to parse %s", geom)
 
     def extract_gripper_bp(
         self,
         element: mjcf.Element,
+        joint_positions: List[float],
     ) -> Optional[Tuple[Attachment, GripperBlueprint]]:
         logger.warning("Gripper parsing is not fully implemented yet.")
 
-        joint_positions = [0]
         for heuristic in self.gripper_heuristic_classes:
             if (h := heuristic(element, joint_positions)) and h.search():
                 return h.to_blueprint()
@@ -256,7 +268,6 @@ class MujocoXMLImporter:
         name = getattr(element, "name", None)
         if not name:
             return None
-
         for heuristic in self.robot_heuristic_classes:
             if (h := heuristic(element, joint_positions)) and h.search():
                 return h.to_blueprint()

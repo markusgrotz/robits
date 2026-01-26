@@ -22,11 +22,11 @@ class GripperHeuristic(ABC):
     def to_blueprint(self) -> Tuple[Attachment, GripperBlueprint]:
         default_joint_positions = self.joint_positions[: self.num_joints]
         gripper_bp = GripperBlueprint(
-            "/gripper",  # will be fixed later
+            f"/{self.prefix}",
             self.model(),
             default_joint_positions=default_joint_positions,
         )
-        attachment = Attachment("/gripper", "")
+        attachment = Attachment(f"/{self.prefix}", "")
         return (attachment, gripper_bp)
 
     @abstractmethod
@@ -42,18 +42,27 @@ class GripperHeuristic(ABC):
     def num_joints(self) -> int:
         pass
 
+    @property
+    @abstractmethod
+    def prefix(self) -> str:
+        pass
+
 
 class PandaHeuristic(GripperHeuristic):
     @property
     def num_joints(self) -> int:
         return 1
 
+    @property
+    def prefix(self) -> str:
+        return "panda hand"
+
     def model(self) -> RobotDescriptionModel:
         return RobotDescriptionModel("panda_mj_description", "hand.xml")
 
     def search(self) -> bool:
-        for b in self.element.find_all("body"):
-            if hasattr(b, "name") and "gripper" in b.name:
+        for b in self.element.find_all("joint"):
+            if hasattr(b, "name") and "panda hand\\finger_joint1" in b.name:
                 return True
         return False
 
@@ -63,17 +72,22 @@ class RobotiqHeuristic(GripperHeuristic):
     def num_joints(self) -> int:
         return 1
 
+    @property
+    def prefix(self) -> str:
+        return "robotiq_2f85"
+
     def model(self) -> RobotDescriptionModel:
         return RobotDescriptionModel("robotiq_2f85_mj_description")
 
     def search(self) -> bool:
-        for b in self.element.find_all("body"):
-            if hasattr(b, "name") and "gripper" in b.name:
+        for b in self.element.find_all("joint"):
+            if hasattr(b, "name") and "robotiq_2f85\\right_coupler_joint" in b.name:
                 return True
         return False
 
 
 def get_all_gripper_heuristics_classes() -> List[type[GripperHeuristic]]:
-    logger.warning("Not fully implemented yet. Only Robotiq grippers are supported.")
-
-    return [RobotiqHeuristic]
+    return [
+        RobotiqHeuristic,
+        PandaHeuristic,
+    ]
