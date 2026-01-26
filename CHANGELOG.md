@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Extracted camera intrinsics into a dedicated utility to avoid unnecessary open3d imports.
+
 ## [0.7.2] - 2026-01-23
 
 - Fix MuJoCo importer after blueprint refactor from name to path

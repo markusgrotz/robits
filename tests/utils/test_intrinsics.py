@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 
 
-from robits.utils import vision_utils
+from robits.utils import camera_intrinsics
 
 
 class TestIntrinsics(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestIntrinsics(unittest.TestCase):
             ]
         )
 
-        resized_intrinsics = vision_utils.resize_intrinsics(
+        resized_intrinsics = camera_intrinsics.resize_intrinsics(
             intrinsics, current_image_size, target_image_size
         )
 

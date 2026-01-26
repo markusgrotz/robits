@@ -25,7 +25,7 @@ from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import BlueprintGroup
 
 from robits.sim import mjcf_utils
-from robits.utils import vision_utils
+from robits.utils import camera_intrinsics
 
 from robits.sim.converters.robot_heuristics import get_all_heuristics_classes
 from robits.sim.converters.gripper_heuristics import get_all_gripper_heuristics_classes
@@ -176,7 +176,7 @@ class MujocoXMLImporter:
         width, height = 640, 480
 
         if fovy := getattr(element, "fovy", None):
-            intrinsics = vision_utils.intrinsics_from_fovy(fovy, width, height)
+            intrinsics = camera_intrinsics.intrinsics_from_fovy(fovy, width, height)
         else:
             intrinsics = np.array(
                 [[385.0, 0.0, 320.0], [0.0, 385.0, 240.0], [0.0, 0.0, 1.0]]

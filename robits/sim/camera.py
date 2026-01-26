@@ -14,7 +14,7 @@ from robits.sim.blueprints import CameraBlueprint
 from robits.sim.env_client import MujocoEnvClient
 from robits.sim.env_design import env_designer
 
-from robits.utils.vision_utils import make_camera_intrinsics
+from robits.utils.camera_intrinsics import make_camera_intrinsics
 
 DEFAULT_FOCAL_LENGTH = 579.4113
 
