@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 DUMMY_MODEL = mjcf.from_xml_string(
-    '<mujoco><worldbody><body><geom type="box" rgba="1 0 0 1" size="0.5 0.5 0.5"/></body></worldbody></mujoco>'
+    '<mujoco><worldbody><body><geom type="box" rgba="1 0 0 1" size="0.05 0.05 0.05"/></body></worldbody></mujoco>'
 )
 
 
@@ -63,7 +63,7 @@ def load_model_from_blueprint(blueprint: RobotDescriptionModel):
     )
     if blueprint.model_prefix_name:
         model.namescope.name = blueprint.model_prefix_name
-    logger.info("namescope is %s", model.namescope.name)
+    logger.info("Namescope is %s", model.namescope.name)
     return model
 
 
@@ -263,5 +263,5 @@ def get_home_key_qpos(root: mjcf.RootElement) -> List[float]:
         return []
     for key in root.keyframe.find_all("key"):
         if key.name == "home":
-            return key.qpos.tolist()
+            return key.ctrl.tolist()
     return []
