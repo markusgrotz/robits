@@ -87,8 +87,7 @@ all = [
   "pyrealsense2-beta==2.56.0.8430; python_version >= '3.12' and platform_machine == 'x86_64'",
 
   # sim
-  "mujoco==3.3.7; python_version < '3.10'",
-  "mujoco>=3.3,<4.0; python_version >= '3.10'",
+  "mujoco>=3.3,<4.0",
   "robot-descriptions>=1.14.0,<2.0",
   "dm-control>=1.0.30,<2.0",
 
