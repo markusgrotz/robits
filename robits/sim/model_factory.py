@@ -240,17 +240,16 @@ class SceneBuilder:
     ):
         logger.info("Building robot model for %s", blueprint.path)
         robot = mjcf_utils.load_and_clean_model(blueprint.model)
-
-        robot.namescope.name = blueprint.path.rsplit("/", maxsplit=1)[-1]
+        robot.namescope.name = blueprint.basename
 
         for s in robot.find_all("site"):
             logger.info("Found site %s", s.name)
 
-        if gripper_blueprint:
-            robot = self.attach_gripper(robot, blueprint.attachment, gripper_blueprint)
-
         if blueprint.default_joint_positions:
             mjcf_utils.update_joint_position(robot, blueprint.default_joint_positions)
+
+        if blueprint.attachment and gripper_blueprint:
+            robot = self.attach_gripper(robot, blueprint.attachment, gripper_blueprint)
 
         robot = self.scene.attach(robot)
         mjcf_utils.add_offset_pose(robot, blueprint.pose)
@@ -277,26 +276,19 @@ class SceneBuilder:
         logger.info("Attaching gripper %s to robot model", gripper_blueprint.path)
 
         gripper_model = mjcf_utils.load_and_clean_model(gripper_blueprint.model)
-        logger.info(
-            "Changing the namescope of the gripper to gripper. Previously: %s",
-            gripper_model.namescope.name,
-        )
-        gripper_model.namescope.name = "gripper"
+        gripper_model.namescope.name = gripper_blueprint.basename
+
+        if gripper_blueprint.default_joint_positions:
+            mjcf_utils.update_joint_position(
+                gripper_model, gripper_blueprint.default_joint_positions
+            )
 
         attachment_site = arm_model.worldbody.find(
             "site", attachment_blueprint.attachment_site
         )
         if attachment_site is None:
-            logger.error(
-                "Unable to find an attachment site. Adding attachment site manually."
-            )
-
-        if attachment_site.name != "attachment_site":
-            logger.warning(
-                "Renaming attachment site for consistency. Previously: %s, now called attachment_site",
-                attachment_site.name,
-            )
-            attachment_site.name = "attachment_site"
+            logger.error("Unable to find an attachment site. Unable to attach gripper.")
+            return arm_model
 
         frame = attachment_site.attach(gripper_model)
         mjcf_utils.add_offset_pose(frame, attachment_blueprint.attachment_offset)
