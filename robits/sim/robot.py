@@ -66,9 +66,12 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
             self._robot_name = robot_name
 
         if gripper:
-            prefix = side_name or robot_name
-            gripper.joint_names = [f"{prefix}/{j}" for j in gripper.joint_names]
-            gripper.actuator_names = [f"{prefix}/{a}" for a in gripper.actuator_names]
+            gripper.joint_names = [
+                f"{self._robot_name}/{j}" for j in gripper.joint_names
+            ]
+            gripper.actuator_names = [
+                f"{self._robot_name}/{a}" for a in gripper.actuator_names
+            ]
 
         self.default_joint_positions = default_joint_positions
         self.gripper = gripper
@@ -125,8 +128,8 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
     ) -> Dict[str, Any]:
         obs: Dict[str, Any] = {}
         obs["timestamp"] = time.time()
-        obs["joint_positions"] = self.data.qpos[self.joint_ids].copy()  # Filter
-        obs["joint_velocities"] = self.data.qvel[self.joint_ids].copy()
+        obs["joint_positions"] = self.data.qpos[self.qpos_indices].copy()
+        obs["joint_velocities"] = self.data.qvel[self.qvel_indices].copy()
         obs["joint_forces"] = np.zeros_like(obs["joint_positions"])
 
         if include_gripper_obs:
@@ -149,24 +152,26 @@ class MujocoRobot(MujocoJointControlClient, UnimanualRobot):
         Heuristic to search for a site
         """
         if self.model.nsite == 1:
-            logger.info("Found a single site")
-            return self.data.site(0)
+            site = self.data.site(0)
+            logger.info("Found a single site %s", site.name)
+            return site
 
         logger.warning("Found multiple sites.")
-        # TODO test if site is unique in the robot model ...
-        robot_side = self.joint_names[-1].split("/")[0]
 
         for i in range(self.model.nsite):
             logger.info("%s", self.data.site(i).name)
 
         for i in range(self.model.nsite):
             site_name = self.data.site(i).name
-            if robot_side in site_name and "gripper" in site_name:
+            if self.gripper and self.gripper.gripper_name in site_name:
                 logger.warning("Choosing site %s", site_name)
                 return self.data.site(i)
 
+        robot_side = self.joint_names[-1].split("/")[0]
+
         for i in range(self.model.nsite):
             if robot_side in self.data.site(i).name:
+                logger.warning("Choosing site %s", site_name)
                 return self.data.site(i)
         raise ValueError("Unable to find a site")
 

@@ -235,9 +235,11 @@ class MujocoCartesianControl(ControllerBase, MujocoJointControlClient):
 
                 q = data.qpos.copy()
                 mujoco.mj_integratePos(model, q, dq, integration_dt)
-                q = q[self.env.num_free_joints * 6 :]
-                np.clip(q, *model.jnt_range.T, out=q)
-                data.ctrl[self.actuator_ids] = q[self.joint_ids]
+
+                clipped_q = np.clip(
+                    q[self.qpos_indices], *self.model.jnt_range[self.joint_ids].T
+                )
+                data.ctrl[self.actuator_ids] = clipped_q
 
                 pos_achieved = np.linalg.norm(error_pos) <= pos_threshold
                 ori_achieved = np.linalg.norm(error_ori) <= ori_threshold

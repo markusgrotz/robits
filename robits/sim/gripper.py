@@ -58,9 +58,13 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         self.set_pos(np.zeros(len(self.actuator_ids)))
 
     def get_obs(self) -> Dict[str, Any]:
-        qpos = self.data.qpos[self.joint_ids].copy()
-        qpos = self._normalize(qpos)
-        return {"finger_positions": qpos, "timestamp": time.time()}
+        qpos = self.data.qpos[self.qpos_indices].copy()
+        qpos_normalized = self._normalize(qpos)
+        return {
+            "finger_positions": qpos_normalized,
+            "joint_positions_raw": qpos,
+            "timestamp": time.time(),
+        }
 
     def is_open(self) -> bool:
         return bool(self.get_obs()["finger_positions"][0] > 0.5)

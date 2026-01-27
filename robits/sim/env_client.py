@@ -9,17 +9,6 @@ import mujoco
 
 from robits.sim.env import MujocoEnv
 
-"""
-@dataclass
-class ControlGroup:
-
-    joint_ids: np.ndarray
-
-    actuator_ids: np.ndarray
-
-    site_id: int
-"""
-
 
 class MujocoEnvClient:
     """
@@ -74,7 +63,9 @@ class MujocoJointControlClient(MujocoEnvClient):
         """
         :returns: the joint ids
         """
-        return np.array([self.model.joint(name).id for name in self.joint_names])
+        return np.array(
+            [self.model.joint(name).id for name in self.joint_names], dtype=int
+        )
 
     @property
     @lru_cache(1)
@@ -86,7 +77,33 @@ class MujocoJointControlClient(MujocoEnvClient):
             return np.array(
                 [self.env.model.actuator(n).id for n in self.actuator_names]
             )
-        return np.array([self.env.joint_id_to_actuator_id[i] for i in self.joint_ids])
+        return np.array(
+            [self.env.joint_id_to_actuator_id[i] for i in self.joint_ids], dtype=int
+        )
+
+    @property
+    @lru_cache(1)
+    def qpos_indices(self) -> np.ndarray:
+        """
+        :returns: the qpos indicies for each actuated joints
+        """
+        return np.array(
+            [self.model.jnt_qposadr[i] for i in self.joint_ids],
+            dtype=int,
+        )
+
+    @property
+    @lru_cache(1)
+    def qvel_indices(self) -> np.ndarray:
+        """
+        qvel, qacc indices for each actuated joint, using `jnt_dofadr`.
+
+        see https://github.com/google-deepmind/mujoco/issues/1564
+        """
+        return np.array(
+            [self.model.jnt_dofadr[i] for i in self.joint_ids],
+            dtype=int,
+        )
 
     @property
     @lru_cache(1)
@@ -110,8 +127,4 @@ class MujocoJointControlClient(MujocoEnvClient):
 
         :returns: A numpy array of the current joint positions
         """
-        current_joint_positions = self.data.qpos.copy()
-        current_joint_positions = current_joint_positions[
-            self.env.num_free_joints * 6 :
-        ]
-        return current_joint_positions[self.joint_ids]
+        return self.data.qpos[self.qpos_indices].copy()
