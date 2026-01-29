@@ -6,6 +6,7 @@ from functools import partial
 
 import rich_click as click
 
+from robits.sim.env_design import env_designer
 from robits.core.abc.control import control_types
 from robits.core.utils import FrequencyTimer
 
@@ -43,22 +44,25 @@ def generate_lemniscate_6d_trajectory(
 @click.command
 @cli_options.robot()
 def cli(robot):
+    env_designer.add_floor()
+
     console = cli_utils.console
-    console.rule("Starting")
+
+    console.rule("Moving robot to home position")
 
     robot.control.move_home()
     timer = FrequencyTimer(25)
 
-    pose_to_robot = partial(transform_pose, robot.transform_world_to_robot)
+    console.rule("Starting")
 
+    pose_to_robot = partial(transform_pose, robot.transform_world_to_robot)
     trajectory = generate_lemniscate_6d_trajectory()
 
     timer.reset()
     with robot.control(control_types.cartesian, asynchronous=True) as ctrl:
-
         for _ in range(10):
             for position, orientation in trajectory:
-                orientation = np.array([0, -1, 0, 0])
+                orientation = np.array([1, 0, 0, 0])
                 ctrl.update(pose_to_robot(position.tolist(), orientation))
                 timer.wait_for_cycle()
 

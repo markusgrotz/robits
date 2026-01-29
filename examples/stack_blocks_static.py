@@ -20,13 +20,14 @@ from robits.cli import cli_options
 
 from robits.sim.env_design import env_designer
 
+
 @click.command
 @filepath_option(
     "--output-path", default="/tmp/data/stack_blocks", help="Where to save the ."
 )
 @cli_options.robot()
 def cli(output_path, robot):
-
+    env_designer.add_floor()
     env_designer.add_blocks()
 
     console = cli_utils.console
@@ -48,11 +49,9 @@ def cli(output_path, robot):
     robot.gripper.open()
 
     with writer:
-
         time.sleep(0.1)
 
         with robot.control(control_types.cartesian) as ctrl:
-
             grasp_pose = np.array([0.5, 0.2, 0.015])
 
             console.print("Moving to pregrasp pose.")

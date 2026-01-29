@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import numpy as np
 
 import rich_click as click
@@ -9,6 +10,8 @@ from robits.core.abc.control import control_types
 
 from robits.dataset.io.recorder import DatasetRecorder
 from robits.dataset.io.writer import DatasetWriter
+
+from robits.sim.env_design import env_designer
 
 from robits.cli import cli_utils
 from robits.cli import cli_options
@@ -20,11 +23,12 @@ from robits.cli import cli_options
 )
 @cli_options.robot()
 def cli(output_path, robot):
+    env_designer.add_floor()
 
     console = cli_utils.console
     writer = DatasetWriter(output_path, DatasetRecorder(robot))
 
-    orientation_delta = np.array([0, -1, 0, 0])
+    orientation_delta = np.array([0, 0, 0, 1])
     position_delta = np.array([0, 0, 0.05])
 
     console.rule("Moving robot to default pose")
@@ -33,11 +37,10 @@ def cli(output_path, robot):
     console.rule("Starting data collection.")
 
     with writer:
-
         with robot.control(control_types.cartesian) as ctrl:
-
             console.print("moving up.")
             ctrl.update((position_delta, orientation_delta), relative=True)
+            time.sleep(0.1)
             console.print("moving down.")
             ctrl.update((-position_delta, orientation_delta), relative=True)
             console.print("closing gripper.")

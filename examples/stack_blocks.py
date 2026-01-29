@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 )
 @cli_options.robot()
 def cli(output_path, robot):
-
+    env_designer.add_floor()
     env_designer.add_blocks()
 
     console = cli_utils.console
@@ -66,11 +66,9 @@ def cli(output_path, robot):
         return
 
     with writer:
-
         time.sleep(0.1)
 
         with robot.control(control_types.cartesian) as ctrl:
-
             target_point = pcd.points[points[0]].copy()
             target_point[2] += 0.05
             ctrl.update((target_point, default_robot_orientation))
