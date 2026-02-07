@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse mass property for geom tags when importing MuJoCo XML files
 - Parse degree option when importing MuJoCo XML files
 - Fix DEFAULT_FREE_JOINT_QPOS handling in model_factory module
-
+- Add more heuristics to detect robot/grippers when importing from MuJoCo XML
 
 
 ## [0.8.0] - 2026-01-27

@@ -67,6 +67,25 @@ class PandaHeuristic(GripperHeuristic):
         return False
 
 
+class AllegroHeuristic(GripperHeuristic):
+    @property
+    def num_joints(self) -> int:
+        return 16
+
+    @property
+    def prefix(self) -> str:
+        return "allegro_right"
+
+    def model(self) -> RobotDescriptionModel:
+        return RobotDescriptionModel("allegro_hand_mj_description")
+
+    def search(self) -> bool:
+        for b in self.element.find_all("joint"):
+            if hasattr(b, "name") and "allegro_right\\ffj0" in b.name:
+                return True
+        return False
+
+
 class RobotiqHeuristic(GripperHeuristic):
     @property
     def num_joints(self) -> int:
@@ -86,8 +105,51 @@ class RobotiqHeuristic(GripperHeuristic):
         return False
 
 
+class AbilityHand(GripperHeuristic):
+    @property
+    def num_joints(self) -> int:
+        return 10
+
+    @property
+    def prefix(self) -> str:
+        return "ability_hand"
+
+    def model(self) -> RobotDescriptionModel:
+        return RobotDescriptionModel(
+            "ability_hand_mj_description", variant_name="./hands/abh_right_large.xml"
+        )
+
+    def search(self) -> bool:
+        for b in self.element.find_all("joint"):
+            if hasattr(b, "name") and "ability_hand\\index_mcp" in b.name:
+                return True
+        return False
+
+
+class XArmGripper(GripperHeuristic):
+    @property
+    def num_joints(self) -> int:
+        return 1
+
+    @property
+    def prefix(self) -> str:
+        return "xarm7 hand"
+
+    def model(self) -> RobotDescriptionModel:
+        return RobotDescriptionModel("xarm7_mj_description", variant_name="hand.xml")
+
+    def search(self) -> bool:
+        for b in self.element.find_all("joint"):
+            if hasattr(b, "name") and "xarm7 hand\\left_finger_joint" in b.name:
+                return True
+        return False
+
+
 def get_all_gripper_heuristics_classes() -> List[type[GripperHeuristic]]:
     return [
         RobotiqHeuristic,
         PandaHeuristic,
+        XArmGripper,
+        AbilityHand,
+        AllegroHeuristic,
     ]
