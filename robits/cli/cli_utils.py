@@ -69,4 +69,4 @@ def setup_cli(level: Union[str, int] = logging.INFO, force: bool = True):
 
     np.set_printoptions(precision=4, suppress=True)
 
-    logger.info("Current package version is %s", __version__)
+    logger.info("Current RoBits package version is %s", __version__)
