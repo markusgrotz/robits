@@ -50,7 +50,7 @@ robot's coordinate system.
 
 
 .. literalinclude:: ../../examples/pick_up_block.py
-   :emphasize-lines: 19,26-31
+   :emphasize-lines: 22,26-31
    :linenos:
 
 
