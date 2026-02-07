@@ -198,6 +198,8 @@ class MujocoXMLImporter:
         geom_type = geom.type
         pose = mjcf_utils.pose_from_element(geom)
 
+        mass = geom.mass or 0.0
+
         if geom_type == "mesh":
             scale = getattr(geom, "scale", 1.0)
             mesh_path = geom.mesh.file.get_vfs_filename(False)
@@ -247,7 +249,7 @@ class MujocoXMLImporter:
                 size[1] = extend
 
             logger.debug("Size: %s, RGBA: %s", size, rgba)
-            return GeomBlueprint(name, geom_type, pose, size, rgba, is_static)
+            return GeomBlueprint(name, geom_type, pose, size, rgba, is_static, mass)
         else:
             logger.error("Unable to parse %s", geom)
 

@@ -213,7 +213,7 @@ class SceneBuilder:
             "geom",
             type=blueprint.geom_type,
             name=blueprint.basename,
-            mass=blueprint.mass,
+            mass=blueprint.mass if blueprint.mass else None,
             size=blueprint.size,
             rgba=blueprint.rgba,
         )
