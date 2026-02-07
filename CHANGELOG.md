@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix DEFAULT_FREE_JOINT_QPOS handling in model_factory module
 
 
+
 ## [0.8.0] - 2026-01-27
 
 - Fix home key extraction and reduce dummy model size

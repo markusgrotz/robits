@@ -80,5 +80,20 @@ class IIWAHeuristic(RobotHeuristic):
         return bool("iiwa" in getattr(self.element, "name", ""))
 
 
+class XArm7Heuristic(RobotHeuristic):
+    @property
+    def num_joints(self) -> int:
+        # xArm7 has 7 revolute joints
+        return 7
+
+    def model(self) -> RobotDescriptionModel:
+        return RobotDescriptionModel(
+            "xarm7_mj_description", variant_name="xarm7_nohand.xml"
+        )
+
+    def search(self) -> bool:
+        return bool("xarm7" in getattr(self.element, "name", ""))
+
+
 def get_all_heuristics_classes() -> List[type[RobotHeuristic]]:
-    return [PandaHeuristic, UR10eHeuristic, IIWAHeuristic]
+    return [PandaHeuristic, UR10eHeuristic, IIWAHeuristic, XArm7Heuristic]
