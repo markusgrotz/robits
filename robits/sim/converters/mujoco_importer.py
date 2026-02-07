@@ -72,6 +72,8 @@ class MujocoXMLImporter:
 
         self.seq = 0
 
+        self.use_degrees = getattr(self.model.compiler, "angle", "radian") == "degree"
+
     def get_top_level_parent(self, element: mjcf.Element) -> Optional[mjcf.Element]:
         current = element
         while current.parent:
@@ -105,7 +107,7 @@ class MujocoXMLImporter:
             else:
                 visited_body_elements.add(body_element)
 
-            pose = mjcf_utils.pose_from_element(body_element)
+            pose = mjcf_utils.pose_from_element(body_element, self.use_degrees)
             if mjcf_utils.has_freejoint(body_element):  # we have a top level element
                 is_static = False
                 free_joint_body_elements.append(body_element)
@@ -184,7 +186,7 @@ class MujocoXMLImporter:
             intrinsics = np.array(
                 [[385.0, 0.0, 320.0], [0.0, 385.0, 240.0], [0.0, 0.0, 1.0]]
             )
-        pose = mjcf_utils.pose_from_element(element)
+        pose = mjcf_utils.pose_from_element(element, self.use_degrees)
         return CameraBlueprint(name, width, height, intrinsics, pose)
 
     def parse_geom_tag(
@@ -195,9 +197,9 @@ class MujocoXMLImporter:
             self.seq += 1
         else:
             name = f"{geom.name}"
-        geom_type = geom.type
-        pose = mjcf_utils.pose_from_element(geom)
 
+        geom_type = geom.type
+        pose = mjcf_utils.pose_from_element(geom, self.use_degrees)
         mass = geom.mass or 0.0
 
         if geom_type == "mesh":

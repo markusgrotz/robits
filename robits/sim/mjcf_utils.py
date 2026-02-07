@@ -208,7 +208,7 @@ def add_offset_pose(element: mjcf.Element, offset: Optional[Pose] = None):
     element.quat = new_pose.quaternion_wxyz
 
 
-def pose_from_element(element: mjcf.Element) -> Pose:
+def pose_from_element(element: mjcf.Element, use_degrees: bool = True) -> Pose:
     pose = Pose()
     if hasattr(element, "pos") and element.pos is not None:
         pose = pose.with_position(element.pos)
@@ -236,7 +236,7 @@ def pose_from_element(element: mjcf.Element) -> Pose:
         logger.warning(
             "Not fully implemented. Check if there is a compile flag that specifies the units. Something like # <compiler angle=degree ..."
         )
-        pose = pose.with_euler(element.euler, degrees=True)
+        pose = pose.with_euler(element.euler, degrees=use_degrees)
     return pose
 
 

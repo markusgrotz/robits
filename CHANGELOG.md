@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Parse mass property for geom tags when importing MuJoCo XML files
+- Parse degree option when importing MuJoCo XML files
 
 ## [0.8.0] - 2026-01-27
 
