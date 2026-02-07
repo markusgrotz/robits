@@ -202,7 +202,7 @@ class SceneBuilder:
                 joint = top_level_parent.add("freejoint")
                 joint.name = f"{top_level_parent.name}_joint"
                 for k in self.scene.find_all("key"):
-                    qpos = DEFAULT_FREE_JOINT_QPOS
+                    qpos = DEFAULT_FREE_JOINT_QPOS.copy()
                     if top_level_parent.pos is not None:
                         qpos[:3] = top_level_parent.pos
                     if top_level_parent.quat is not None:
