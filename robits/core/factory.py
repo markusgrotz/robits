@@ -39,6 +39,11 @@ class BaseFactory(ABC):
         self.config_type = config_type
         self.config_name = config_name
 
+        logger.info(
+            "Loading %s config with name %s", self.config_type, self.config_name
+        )
+        self.config_dict = config_manager.load_dict(self.config_name)
+
     @abstractmethod
     def build(self) -> Any:
         """
@@ -46,7 +51,7 @@ class BaseFactory(ABC):
         """
         pass
 
-    def build_instance(self, config_dict: Dict[str, Any]) -> Any:
+    def build_instance(self) -> Any:
         """
         Dynamically imports and constructs a class instance from a configuration dictionary.
 
@@ -54,13 +59,12 @@ class BaseFactory(ABC):
         :param config_dict: The configuration dictionary.
         :return: An instance of the specified class.
         """
-
-        if "class_path" not in config_dict:
+        if "class_path" not in self.config_dict:
             logger.error("Unable to determine class path.")
             return None
 
-        class_path = config_dict["class_path"]
-        config = config_manager.from_dict(self.config_type, config_dict)
+        class_path = self.config_dict["class_path"]
+        config = config_manager.from_dict(self.config_type, self.config_dict)
 
         module_name, class_name = class_path.rsplit(".", 1)
         module = importlib.import_module(module_name)
@@ -83,15 +87,12 @@ class AudioFactory(BaseFactory):
         super().__init__(ConfigTypes.audio, config_name)
 
     def build(self) -> AudioBase:
-        logger.info("Building %s from config %s", self.config_type, self.config_name)
-        config_dict = config_manager.load_dict(self.config_name)
-
-        if (config_name := config_dict.get(self.config_type, None)) and isinstance(
+        if (config_name := self.config_dict.get(self.config_type, None)) and isinstance(
             config_name, str
         ):
-            config_dict[self.config_type] = AudioFactory(config_name).build()
+            self.config_dict[self.config_type] = AudioFactory(config_name).build()
 
-        return self.build_instance(config_dict)
+        return self.build_instance()
 
 
 class SpeechFactory(BaseFactory):
@@ -99,68 +100,73 @@ class SpeechFactory(BaseFactory):
         super().__init__(ConfigTypes.speech, config_name)
 
     def build(self) -> SpeechBase:
-        logger.info("Building %s from config %s", self.config_type, self.config_name)
-        config_dict = config_manager.load_dict(self.config_name)
-
-        if (config_name := config_dict.get(self.config_type, None)) and isinstance(
+        if (config_name := self.config_dict.get(self.config_type, None)) and isinstance(
             config_name, str
         ):
-            config_dict[self.config_type] = SpeechFactory(config_name).build()
+            self.config_dict[self.config_type] = SpeechFactory(config_name).build()
 
-        return self.build_instance(config_dict)
+        return self.build_instance()
 
 
 class GripperFactory(BaseFactory):
-    def __init__(self, config_name) -> None:
+    def __init__(self, config_name: str) -> None:
         super().__init__(ConfigTypes.gripper, config_name)
 
     def build(self) -> GripperBase:
-        logger.info("Building gripper from config %s", self.config_name)
-        config_dict = config_manager.load_dict(self.config_name)
-
-        if (config_name := config_dict.get(self.config_type, None)) and isinstance(
+        if (config_name := self.config_dict.get(self.config_type, None)) and isinstance(
             config_name, str
         ):
-            config_dict[self.config_type] = GripperFactory(config_name).build()
+            self.config_dict[self.config_type] = GripperFactory(config_name).build()
 
-        return self.build_instance(config_dict)
+        return self.build_instance()
 
 
 class CameraFactory(BaseFactory):
-    def __init__(self, config_name) -> None:
+    def __init__(self, config_name: str) -> None:
         super().__init__(ConfigTypes.camera, config_name)
 
     def build(self) -> CameraBase:
-        logger.info("Building camera from config %s", self.config_name)
-        config_dict = config_manager.load_dict(self.config_name)
-
-        if (config_name := config_dict.get(self.config_type, None)) and isinstance(
+        if (config_name := self.config_dict.get(self.config_type, None)) and isinstance(
             config_name, str
         ):
-            config_dict[self.config_type] = CameraFactory(config_name).build()
+            self.config_dict[self.config_type] = CameraFactory(config_name).build()
 
-        return self.build_instance(config_dict)
+        return self.build_instance()
 
 
 class RobotFactory(BaseFactory):
-    def __init__(self, config_name) -> None:
+    def __init__(self, config_name: str, prefix: str = "") -> None:
         super().__init__(ConfigTypes.robot, config_name)
+        self.prefix = prefix
 
     def build(self) -> RobotType:
-        logger.info("Building robot from config %s", self.config_name)
-        config_dict = config_manager.load_dict(self.config_name)
-
-        for arm_side in ["left_robot", "right_robot"]:
+        config_dict = self.config_dict
+        for side_name in ["left", "right"]:
+            arm_side = f"{side_name}_robot"
             if arm_side in config_dict:
                 config_name = config_dict[arm_side]
-                config_dict[arm_side] = RobotFactory(config_name).build()
+                config_dict[arm_side] = RobotFactory(config_name, side_name).build()
 
         for config_type, factory_cls in config_factories.items():
             type_name = str(config_type.value)
             if type_name in config_dict:
                 if config_name := config_dict.get(type_name, None):
                     if isinstance(config_name, str):
-                        config_dict[type_name] = factory_cls(config_name).build()
+                        factory = factory_cls(config_name)
+                        for key in ["joint_names", "actuator_names", "gripper_name"]:
+                            if self.prefix and (
+                                value := factory.config_dict.get(key, None)
+                            ):
+                                prefix = (
+                                    f"{self.prefix}_{self.config_dict['robot_name']}"
+                                )
+                                if isinstance(value, str):
+                                    factory.config_dict[key] = f"{prefix}/{value}"
+                                else:
+                                    factory.config_dict[key] = [
+                                        f"{prefix}/{e}" for e in value
+                                    ]
+                        config_dict[type_name] = factory.build()
                     else:
                         logger.warning("Already initialized.")
 
@@ -174,7 +180,7 @@ class RobotFactory(BaseFactory):
         config_dict["cameras"] = cameras
 
         logger.info("Building robot with config %s", config_dict)
-        return self.build_instance(config_dict)
+        return self.build_instance()
 
 
 config_factories = {
