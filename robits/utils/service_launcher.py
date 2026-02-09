@@ -11,8 +11,9 @@ from robits.core.factory import CameraFactory
 from robits.core.factory import RobotFactory
 from robits.core.factory import GripperFactory
 
+from robits.cli import cli_utils
+
 from robits.remote.server.server_base import ZMQServerBase
-from robits.sim.env_client import MujocoEnvClient
 
 available_services = config_manager.list()
 
@@ -23,6 +24,7 @@ MAGIC_CMD_ARG = "ROBITS_CMD_ED1hV3pHOIOoc"
 @click.option("--magic-string")
 @choice_argument("config-name", type=click.Choice(available_services))
 def cli(magic_string, config_name):
+    cli_utils.setup_cli()
     if magic_string != MAGIC_CMD_ARG:
         print("Please run with magic-string argument")
         sys.exit(-1)
@@ -38,7 +40,7 @@ def cli(magic_string, config_name):
     else:
         raise NotImplementedError("Not implemented yet.")
 
-    if isinstance(service_instance, MujocoEnvClient):
+    if hasattr(service_instance, "env"):
         # Access the enviroment and trigger a build of the environment
         service_instance.env
 
