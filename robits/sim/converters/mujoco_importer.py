@@ -121,26 +121,6 @@ class MujocoXMLImporter:
                 top_level_parent = self.get_top_level_parent(body_element)
                 is_static = top_level_parent not in free_joint_body_elements
 
-            if body_element != model.worldbody:
-                name = getattr(
-                    body_element, "name", f"body_{len(visited_body_elements)}"
-                )
-                parent_fullname = body_to_fullname.get(body_element.parent, None)
-                group_name = _join_full_name(parent_fullname, name)
-                body_to_fullname[body_element] = group_name
-                blueprints.append(BlueprintGroup(group_name, pose=pose))
-
-            logger.info("Parsing geom/mesh tags")
-
-            for geom in body_element.find_all("geom", immediate_children_only=True):
-                logger.info("Parsing %s", geom)
-                geom_bp = self.parse_geom_tag(geom, is_static, self.asset_dir)
-                if geom_bp:
-                    parent_name = body_to_fullname.get(body_element, None)
-                    full_name = _join_full_name(parent_name, geom_bp.path)
-                    geom_bp = replace(geom_bp, path=full_name)
-                    blueprints.append(geom_bp)
-
             if bp := self.extract_robot_bp(body_element, joint_positions):
                 for b in body_element.find_all("body"):
                     visited_body_elements.add(b)
@@ -162,6 +142,26 @@ class MujocoXMLImporter:
 
                 bp = replace(bp, path=_normalize_full_name(bp.path))
                 blueprints.append(bp)
+            else:
+                if body_element != model.worldbody:
+                    name = getattr(
+                        body_element, "name", f"body_{len(visited_body_elements)}"
+                    )
+                    parent_fullname = body_to_fullname.get(body_element.parent, None)
+                    group_name = _join_full_name(parent_fullname, name)
+                    body_to_fullname[body_element] = group_name
+                    blueprints.append(BlueprintGroup(group_name, pose=pose))
+
+                logger.info("Parsing geom/mesh tags")
+
+                for geom in body_element.find_all("geom", immediate_children_only=True):
+                    logger.info("Parsing %s", geom)
+                    geom_bp = self.parse_geom_tag(geom, is_static, self.asset_dir)
+                    if geom_bp:
+                        parent_name = body_to_fullname.get(body_element, None)
+                        full_name = _join_full_name(parent_name, geom_bp.path)
+                        geom_bp = replace(geom_bp, path=full_name)
+                        blueprints.append(geom_bp)
 
         return blueprints
 
