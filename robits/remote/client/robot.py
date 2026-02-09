@@ -8,6 +8,8 @@ from robits.core.data_model.action import CartesianAction
 from robits.remote.client.client_base import ZMQClient
 from robits.remote.client.client_base import PrefixedZMQClient
 from robits.remote.client.gripper import GripperZMQClient
+from robits.remote.client.camera import CameraZMQClient
+
 
 from robits.core.abc.control import ControlManager
 from robits.core.abc.control import ControllerBase
@@ -64,7 +66,11 @@ class RobotZMQClient:
         self.gripper = GripperZMQClient(
             client=PrefixedZMQClient(self.client, "gripper.")
         )
- 
+        num_cameras: int = self.client.call("cameras.__len__")
+        self.cameras = [
+            CameraZMQClient(client=PrefixedZMQClient(self.client, f"cameras.[{i}]."))
+            for i in range(num_cameras)
+        ]
 
     def get_robot_name(self) -> str:
         return self.client.call("robot_name")

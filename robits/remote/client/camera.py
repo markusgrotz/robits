@@ -1,6 +1,7 @@
 from typing import Tuple
 from typing import Dict
 from typing import Any
+from typing import Optional
 
 import numpy as np
 
@@ -14,8 +15,10 @@ class CameraZMQClient(CameraBase):
     Camera client for ZMQ
     """
 
-    def __init__(self, address="localhost", port=5060, **kwargs):
-        self.client = ZMQClient(address, port)
+    def __init__(
+        self, address="localhost", port=5060, client: Optional[Any] = None, **kwargs
+    ):
+        self.client = client or ZMQClient(address, port)
 
     def get_camera_data(self) -> Tuple[CameraData, Dict[str, Any]]:
         result = self.client.call("get_camera_data")

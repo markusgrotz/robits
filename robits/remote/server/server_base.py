@@ -71,7 +71,6 @@ class ZMQServerBase:
                                 "traceback": traceback.format_exc(),
                             }
                         )
-            print("STOPPED")
         except KeyboardInterrupt:
             logger.info("ZMQ Server interrupted by user.")
         finally:
@@ -82,7 +81,10 @@ class ZMQServerBase:
         parts = method_path.split(".")
         attr = self.target
         for part in parts:
-            attr = getattr(attr, part)
+            if part.startswith("[") and part.endswith("]"):
+                attr = attr[int(part[1:-1])]
+            else:
+                attr = getattr(attr, part)
         return attr
 
     def _serialize_result(self, result: Any) -> Dict[str, Any]:
