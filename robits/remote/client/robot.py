@@ -6,6 +6,8 @@ from typing import List
 from robits.core.data_model.action import CartesianAction
 
 from robits.remote.client.client_base import ZMQClient
+from robits.remote.client.client_base import PrefixedZMQClient
+from robits.remote.client.gripper import GripperZMQClient
 
 from robits.core.abc.control import ControlManager
 from robits.core.abc.control import ControllerBase
@@ -59,6 +61,10 @@ class RobotZMQClient:
     def __init__(self, address="localhost", port=5050, **kwargs):
         self.client = ZMQClient(address, port)
         self.control = RemoteControlManager(self.client)
+        self.gripper = GripperZMQClient(
+            client=PrefixedZMQClient(self.client, "gripper.")
+        )
+ 
 
     def get_robot_name(self) -> str:
         return self.client.call("robot_name")

@@ -1,5 +1,6 @@
 from typing import Dict
 from typing import Any
+from typing import Optional
 
 from robits.remote.client.client_base import ZMQClient
 
@@ -9,8 +10,14 @@ class GripperZMQClient:
     Gripper client using ZMQ
     """
 
-    def __init__(self, address="localhost", port=5070, **kwargs):
-        self.client = ZMQClient(address, port)
+    def __init__(
+        self,
+        address: str = "localhost",
+        port: int = 5070,
+        client: Optional[Any] = None,
+        **kwargs,
+    ):
+        self.client = client or ZMQClient(address, port)
 
     def open(self) -> None:
         self.client.call("open")
@@ -27,5 +34,9 @@ class GripperZMQClient:
     def get_info(self) -> Dict[str, Any]:
         return self.client.call("get_info")
 
-    def get_gripper_name(self) -> str:
+    @property
+    def gripper_name(self):
         return self.client.call("gripper_name")
+
+    def set_pos(self, pos):
+        return self.client.call("set_pos", pos)

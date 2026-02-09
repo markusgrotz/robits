@@ -50,3 +50,16 @@ class ZMQClient:
             return reply
 
         return json.loads(reply["result"])
+
+
+class PrefixedZMQClient:
+    """
+    Delegates calls to another client while prepending a method prefix.
+    """
+
+    def __init__(self, client: ZMQClient, method_prefix: str):
+        self.client = client
+        self.method_prefix = method_prefix
+
+    def call(self, method: str, *args, **kwargs: Dict[str, Any]):
+        return self.client.call(f"{self.method_prefix}{method}", *args, **kwargs)
