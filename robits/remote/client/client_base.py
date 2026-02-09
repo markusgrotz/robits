@@ -6,6 +6,8 @@ import json
 
 import zmq
 
+from robits.core.utils import MiscJSONEncoder
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,10 @@ class ZMQClient:
         :param method: name of the method to call
         """
         logger.debug("Calling method %s", method)
-        self.socket.send_json({"method": method, "args": args, "kwargs": kwargs})
+        self.socket.send_json(
+            {"method": method, "args": args, "kwargs": kwargs},
+            cls=MiscJSONEncoder,
+        )
         reply = self.socket.recv_json()
         # reply = json.loads(reply)
         if reply["status"] != "ok":

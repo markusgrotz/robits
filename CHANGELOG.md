@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+- Add JSON encoder to handle numpy parameters for remote serialization
+
+## [0.8.1] - 2026-02-09
 - Parse mass property for geom tags when importing MuJoCo XML files
 - Parse degree option when importing MuJoCo XML files
 - Fix DEFAULT_FREE_JOINT_QPOS handling in model_factory module
