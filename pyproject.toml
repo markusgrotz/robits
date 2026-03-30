@@ -42,7 +42,6 @@ dependencies = [
 sim = [
   "mujoco>=3.3,<4.0",
   "robot-descriptions>=1.14.0,<2.0",
-  "dm-control>=1.0.30,<2.0",
 ]
 
 real = [
@@ -62,7 +61,6 @@ usd = [
   "usd-core>=23.5.0",
   "mujoco>=3.3,<4.0",
   "robot-descriptions>=1.14.0,<2.0",
-  "dm-control>=1.0.30,<2.0",
 ]
 
 remote = ["zmq", "pyzmq", "psutil"]
@@ -89,7 +87,6 @@ all = [
   # sim
   "mujoco>=3.3,<4.0",
   "robot-descriptions>=1.14.0,<2.0",
-  "dm-control>=1.0.30,<2.0",
 
   # usd
   "usd-core>=23.5.0",

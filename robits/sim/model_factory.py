@@ -7,11 +7,12 @@ from typing import List
 import logging
 from pathlib import Path
 from functools import singledispatchmethod
+import zipfile
+import tempfile
 
 import numpy as np
 
 import mujoco
-from dm_control import mjcf
 
 from robits.sim.blueprints import Blueprint
 from robits.sim.blueprints import GeomBlueprint
@@ -25,58 +26,54 @@ from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import BlueprintGroup
 
-from robits.sim import mjcf_utils
+from robits.sim import mjcf_utils as mjcf_utils
 
 logger = logging.getLogger(__name__)
 
-# xyz + wxyz
-DEFAULT_FREE_JOINT_QPOS = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
-
 
 class SceneBuilder:
-    def __init__(self, add_floor: bool = True):
-        self.scene = mjcf.RootElement()
-        # self.scene.worldbody.add("body", name="box_body", pos="0 0 0.5")
-        self.scene.worldbody.add("light", pos="0 0 5")
-        self.key = self.scene.keyframe.add("key", name="home", qpos="", ctrl="")
-        if add_floor:
-            self.add_default_assets()
+    def __init__(self, use_default_scene: bool = True):
+
+        if use_default_scene:
+            self.spec = mujoco.MjSpec.from_string(mjcf_utils.DEFAULT_WORLD_STR)
+        else:
+            self.spec = mujoco.MjSpec()
+            self.spec.worldbody.add_light(pos=[0, 0, 5.0])
+
         # Map full blueprint path -> created MJCF element
-        self.mapping: Dict[str, mjcf.Element] = {}
+        self.mapping: Dict[str, mujoco.MjsElement] = {}
 
     def export_with_assets(self, out_path: Path) -> None:
-        mjcf.export_with_assets(self.scene, out_path.parent, out_path.name)
 
-    def get_parent(self, blueprint: Blueprint) -> mjcf.Element:
+        self.spec.to_file(str(out_path))
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip_path = Path(tmpdir) / "model.zip"
+            self.spec.to_zip(str(zip_path))
+            with zipfile.ZipFile(zip_path, "r") as z:
+                z.extractall(out_path.parent)
+
+    def get_parent(self, blueprint: Blueprint) -> mujoco.MjsBody:
+        """
+        Searches for the parent body given a blueprint
+        """
         if blueprint.parent_path == "/":
-            return self.scene.worldbody
+            return self.spec.worldbody
         if parent := self.mapping.get(blueprint.parent_path, None):
             return parent
         logger.warning(
             "Parent not found for blueprint %s. Assuming worldbody", blueprint
         )
-        return self.scene.worldbody
+        return self.spec.worldbody
 
-    def get_top_level_parent(self, blueprint: Blueprint) -> mjcf.Element:
+    def get_top_level_parent(self, blueprint: Blueprint) -> mujoco.MjsBody:
         """
-        Returns the top parent element below the worldbod
+        Returns the top parent element below the worldbody
         """
         parts = blueprint.path.strip("/").split("/")
         if len(parts) <= 1:
-            return self.scene.worldbody
+            return self.spec.worldbody
         return self.mapping.get("/" + parts[0])
-
-    def add_default_assets(self):
-        self.scene.asset.add("material", name="groundplane")
-        self.scene.worldbody.add(
-            "geom",
-            name="floor",
-            size="0 0 0.05",
-            type="plane",
-            material="groundplane",
-            rgba=[0.5, 0.5, 0.5, 1],
-        )
-        return self
 
     def build_from_blueprints(self, blueprints: Sequence[Blueprint]) -> mujoco.MjModel:
         """
@@ -94,6 +91,7 @@ class SceneBuilder:
             if not b.path.startswith("/"):
                 logger.warning("Invalid blueprint name %s. Skipping blueprint.", b.path)
                 continue
+
             if isinstance(b, RobotBlueprint):
                 robot_bps.append(b)
             elif isinstance(b, GripperBlueprint):
@@ -123,9 +121,33 @@ class SceneBuilder:
         for bp in gripper_bps:
             self.add(bp)
 
-        self.merge_all_keyframes_into_home()
-        logger.debug("Model is %s", self.scene.to_xml_string())
-        return mjcf_utils.reload_model_with_assets(self.scene)
+        logger.debug("Current spec is %s", self.spec.to_xml())
+
+        return self.build()
+        # return self.spec.compile()
+
+    def merge_into_single_home_key(self):
+        model = self.spec.compile()
+
+        qpos = np.zeros(model.nq, dtype=float)
+        ctrl = np.zeros(model.nu, dtype=float)
+
+        for k in self.spec.keys:
+            k_qpos = np.asarray(k.qpos)
+            mask = k_qpos != 0
+            qpos[mask] = k_qpos[mask]
+
+            k_ctrl = np.asarray(k.ctrl)
+            mask = k_ctrl != 0
+            ctrl[mask] = k_ctrl[mask]
+
+        self.spec.add_key(name="home", qpos=qpos, ctrl=ctrl)
+
+    def build(self) -> mujoco.MjModel:
+
+        self.merge_into_single_home_key()
+
+        return self.spec.compile()
 
     @singledispatchmethod
     def add(self, blueprint):
@@ -133,51 +155,63 @@ class SceneBuilder:
 
     @add.register
     def add_mesh(self, blueprint: MeshBlueprint):
-        mujoco_scale = f"{blueprint.scale} {blueprint.scale} {blueprint.scale}"
-        self.scene.asset.add(
-            "mesh",
+
+        mesh = self.spec.add_mesh(
             name=f"{blueprint.basename}_mesh",
             file=blueprint.mesh_path,
-            scale=mujoco_scale,
+            scale=[blueprint.scale] * 3,
         )
+
+        texture_path = Path(blueprint.mesh_path).with_name("textured.png")
+
+        if texture_path.is_file():
+            tex = self.spec.add_texture(
+                name=f"{blueprint.basename}_tex",
+                file=str(texture_path),
+                type=mujoco.mjtTexture.mjTEXTURE_2D,
+            )
+            mat = self.spec.add_material(
+                name=f"{blueprint.basename}_mat", textures=[tex.name]
+            )
+            mat_name = mat.name
+        else:
+            mat_name = None
+
         parent_body = self.get_parent(blueprint)
-        geom = parent_body.add(
-            "geom",
+        geom = parent_body.add_geom(
             name=f"{blueprint.basename}",
-            type="mesh",
+            type=mujoco.mjtGeom.mjGEOM_MESH,
             mass=1.0,
-            mesh=f"{blueprint.basename}_mesh",
+            meshname=mesh.name,
+            material=mat_name,
         )
         mjcf_utils.set_pose(geom, blueprint.pose)
         return self
 
     @add.register
     def add_object(self, blueprint: ObjectBlueprint):
-        obj_model = mjcf_utils.load_model_from_path(
-            blueprint.model_path, escape_separators=True
-        )
-        obj_model = self.scene.attach(obj_model)
+        obj_spec = mujoco.MjSpec.from_file(blueprint.model_path)
 
-        mjcf_utils.add_offset_pose(obj_model, blueprint.pose)
+        obj_mount = self.spec.worldbody.add_frame()
+        frame = self.spec.attach(
+            obj_spec, frame=obj_mount, prefix=f"{blueprint.basename}/"
+        )
+
+        mjcf_utils.add_offset_pose(frame, blueprint.pose)
         return self
 
     @add.register
     def add_camera(self, blueprint: CameraBlueprint):
         camera_name = blueprint.basename
         parent = self.get_parent(blueprint)
-        camera = parent.add(
-            "camera",
-            name=camera_name,
-            mode="trackcom",  # , target="box_body"
-        )
+        camera = parent.add_camera(name=camera_name)
         mjcf_utils.set_pose(camera, blueprint.pose)
         return self
 
     @add.register
     def add_group(self, blueprint: BlueprintGroup):
         parent = self.get_parent(blueprint)
-        name = blueprint.basename
-        body = parent.add("body", name=name)
+        body = parent.add_body(name=blueprint.basename)
         self.mapping[blueprint.path] = body
         mjcf_utils.set_pose(body, blueprint.pose)
         return self
@@ -187,7 +221,7 @@ class SceneBuilder:
         parent = self.get_parent(blueprint)
         if not blueprint.is_static:
             top_level_parent = self.get_top_level_parent(blueprint)
-            if top_level_parent == self.scene.worldbody:
+            if top_level_parent == self.spec.worldbody:
                 logger.warning(
                     "Non-static geom element without a group. To add a freejoint we need to wrap this in a group."
                 )
@@ -199,19 +233,10 @@ class SceneBuilder:
             if mjcf_utils.has_freejoint(top_level_parent):
                 logger.debug("Free joint already exists for %s", blueprint.path)
             else:
-                joint = top_level_parent.add("freejoint")
-                joint.name = f"{top_level_parent.name}_joint"
-                for k in self.scene.find_all("key"):
-                    qpos = DEFAULT_FREE_JOINT_QPOS.copy()
-                    if top_level_parent.pos is not None:
-                        qpos[:3] = top_level_parent.pos
-                    if top_level_parent.quat is not None:
-                        qpos[-4:] = top_level_parent.quat
-                    k.qpos = np.concatenate([k.qpos, qpos], axis=None)
+                top_level_parent.add_freejoint()
 
-        geom = parent.add(
-            "geom",
-            type=blueprint.geom_type,
+        geom = parent.add_geom(
+            type=mjcf_utils.str_to_mujoco_geom_type(blueprint.geom_type),
             name=blueprint.basename,
             mass=blueprint.mass if blueprint.mass else None,
             size=blueprint.size,
@@ -222,14 +247,22 @@ class SceneBuilder:
         return self
 
     def add_mocap(self):
-        _mocap_body = self.scene.worldbody.add("body", name="target", mocap="true")
+        _mocap_body = self.spec.worldbody.add_body(name="target", mocap=1)
         return self
 
     @add.register
     def add_gripper(self, blueprint: GripperBlueprint):
-        gripper_model = mjcf_utils.load_model_from_blueprint(blueprint.model)
 
-        _gripper = self.scene.attach(gripper_model)
+        gripper_spec = mjcf_utils.load_and_clean_spec(blueprint.model)
+
+        gripper_mount = self.spec.worldbody.add_frame()
+        _frame = self.spec.attach(
+            gripper_spec, frame=gripper_mount, prefix=f"{blueprint.basename}/"
+        )
+
+        # mjcf_utils.add_offset_pose(frame, blueprint.pose)
+
+        self.spec.compile()
 
         return self
 
@@ -239,59 +272,64 @@ class SceneBuilder:
         gripper_blueprint: Optional[GripperBlueprint] = None,
     ):
         logger.info("Building robot model for %s", blueprint.path)
-        robot = mjcf_utils.load_and_clean_model(blueprint.model)
-        robot.namescope.name = blueprint.basename
-
-        for s in robot.find_all("site"):
-            logger.info("Found site %s", s.name)
+        robot_spec = mjcf_utils.load_and_clean_spec(blueprint.model)
+        robot_spec.modelname = blueprint.basename
 
         if blueprint.default_joint_positions:
-            mjcf_utils.update_joint_position(robot, blueprint.default_joint_positions)
+            mjcf_utils.update_home_joint_position(
+                robot_spec, blueprint.default_joint_positions
+            )
+
+        for s in robot_spec.sites:
+            logger.info("Found site %s", s.name)
 
         if blueprint.attachment and gripper_blueprint:
-            robot = self.attach_gripper(robot, blueprint.attachment, gripper_blueprint)
+            robot_spec = self.attach_gripper(
+                robot_spec, blueprint.attachment, gripper_blueprint
+            )
 
-        robot = self.scene.attach(robot)
-        mjcf_utils.add_offset_pose(robot, blueprint.pose)
+        self.spec.compile()
+
+        robot_mount = self.spec.worldbody.add_frame()
+        robot_frame = self.spec.attach(
+            robot_spec, frame=robot_mount, prefix=f"{blueprint.basename}/"
+        )
+
+
+        mjcf_utils.add_offset_pose(robot_frame, blueprint.pose)
+
+        self.spec.compile()
+
         return self
-
-    def merge_all_keyframes_into_home(self):
-        qpos = []
-        ctrl = []
-        for k in self.scene.find_all("key"):
-            qpos.append(k.qpos)
-            ctrl.append(k.ctrl)
-            if k != self.key:
-                k.remove()
-
-        self.key.qpos = np.concatenate([*qpos], axis=None)
-        self.key.ctrl = np.concatenate([*ctrl], axis=None)
 
     def attach_gripper(
         self,
-        arm_model: mjcf.Element,
+        arm_model: mujoco.MjSpec,
         attachment_blueprint: Attachment,
         gripper_blueprint: GripperBlueprint,
-    ) -> mujoco.MjModel:
+    ) -> mujoco.MjSpec:
+
         logger.info("Attaching gripper %s to robot model", gripper_blueprint.path)
 
-        gripper_model = mjcf_utils.load_and_clean_model(gripper_blueprint.model)
-        gripper_model.namescope.name = gripper_blueprint.basename
+        gripper_spec = mjcf_utils.load_and_clean_spec(gripper_blueprint.model)
+        gripper_spec.modelname = gripper_blueprint.basename
 
         if gripper_blueprint.default_joint_positions:
-            mjcf_utils.update_joint_position(
-                gripper_model, gripper_blueprint.default_joint_positions
+            mjcf_utils.update_home_joint_position(
+                gripper_spec, gripper_blueprint.default_joint_positions
             )
 
-        attachment_site = arm_model.worldbody.find(
-            "site", attachment_blueprint.attachment_site
-        )
+        attachment_site = arm_model.site(attachment_blueprint.attachment_site)
         if attachment_site is None:
             logger.error("Unable to find an attachment site. Unable to attach gripper.")
             return arm_model
 
-        frame = attachment_site.attach(gripper_model)
+        frame = arm_model.attach(
+            gripper_spec, site=attachment_site, prefix=f"{gripper_blueprint.basename}/"
+        )
+
         mjcf_utils.add_offset_pose(frame, attachment_blueprint.attachment_offset)
-        mjcf_utils.merge_home_keys(arm_model, gripper_model)
+
+        arm_model.compile()
 
         return arm_model

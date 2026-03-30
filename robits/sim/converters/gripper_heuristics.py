@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import logging
 
-from dm_control import mjcf
+import mujoco
 
 from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import Attachment
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class GripperHeuristic(ABC):
-    def __init__(self, element: mjcf.Element, joint_positions):
+    def __init__(self, element: mujoco.MjsElement, joint_positions):
         self.element = element
         self.joint_positions = joint_positions
 
@@ -62,7 +62,7 @@ class PandaHeuristic(GripperHeuristic):
 
     def search(self) -> bool:
         for b in self.element.find_all("joint"):
-            if hasattr(b, "name") and "panda hand\\finger_joint1" in b.name:
+            if "panda hand/finger_joint1" in b.name:
                 return True
         return False
 
@@ -81,7 +81,7 @@ class AllegroHeuristic(GripperHeuristic):
 
     def search(self) -> bool:
         for b in self.element.find_all("joint"):
-            if hasattr(b, "name") and "allegro_right\\ffj0" in b.name:
+            if "allegro_right/ffj0" in b.name:
                 return True
         return False
 
@@ -100,7 +100,7 @@ class RobotiqHeuristic(GripperHeuristic):
 
     def search(self) -> bool:
         for b in self.element.find_all("joint"):
-            if hasattr(b, "name") and "robotiq_2f85\\right_coupler_joint" in b.name:
+            if "robotiq_2f85/right_coupler_joint" in b.name:
                 return True
         return False
 
@@ -121,7 +121,7 @@ class AbilityHand(GripperHeuristic):
 
     def search(self) -> bool:
         for b in self.element.find_all("joint"):
-            if hasattr(b, "name") and "ability_hand\\index_mcp" in b.name:
+            if "ability_hand/index_mcp" in b.name:
                 return True
         return False
 
@@ -140,7 +140,7 @@ class XArmGripper(GripperHeuristic):
 
     def search(self) -> bool:
         for b in self.element.find_all("joint"):
-            if hasattr(b, "name") and "xarm7 hand\\left_finger_joint" in b.name:
+            if "xarm7 hand/left_finger_joint" in b.name:
                 return True
         return False
 

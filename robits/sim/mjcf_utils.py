@@ -3,13 +3,13 @@ from typing import Sequence
 from typing import List
 
 import os
-from importlib import import_module
 import logging
+from pathlib import Path
+from importlib import import_module
 
 import numpy as np
 
 import mujoco
-from dm_control import mjcf
 
 from robits.sim.blueprints import RobotDescriptionModel
 from robits.sim.blueprints import Pose
@@ -18,174 +18,202 @@ from robits.sim.blueprints import Pose
 logger = logging.getLogger(__name__)
 
 
-DUMMY_MODEL = mjcf.from_xml_string(
-    '<mujoco><worldbody><body><geom type="box" rgba="1 0 0 1" size="0.05 0.05 0.05"/></body></worldbody></mujoco>'
-)
+DUMMY_MODEL_STR = """
+<mujoco>
+    <worldbody>
+        <body>
+            <geom type="box" rgba="1 0 0 1" size="0.05 0.05 0.05"/>
+        </body>
+    </worldbody>
+</mujoco>"""
+
+DEFAULT_WORLD_STR = """
+<mujoco>
+    <visual>
+        <headlight diffuse=".5 .5 .5" specular="1 1 1"/>
+    </visual>
+
+    <asset>
+        <texture type="skybox" builtin="gradient" rgb1=".5 .5 .5" rgb2="0 0 0" width="10" height="10"/>
+        <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="1 1 1" rgb2="1 1 1" markrgb="0 0 0" width="300" height="300"/>
+        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.3"/>
+    </asset>
+
+    <worldbody>
+        <geom name="floor" size="5 5 0.01" type="plane" material="groundplane"/>
+        <light pos="0 0 3" diffuse="1 1 1" specular="1 1 1"/>
+    </worldbody>
+</mujoco>"""
 
 
-def load_and_clean_model(blueprint: RobotDescriptionModel):
-    model = load_model_from_blueprint(blueprint)
-    remove_invalid_joints(model)
-    remove_non_home_key(model)
-    try:
-        ensure_existing_home_key(model)
-    except ValueError as e:
-        logger.error(
-            "Something went wrong while adding a homekey. Using simple heuristic.",
-            exc_info=e,
-        )
-        k = model.keyframe.add("key", name="home")
-        k.ctrl = np.zeros(len(model.find_all("actuator")))
-        k.qpos = np.zeros(len(model.find_all("joint")))
-    return model
+def str_to_mujoco_geom_type(type_name: str) -> int:
+    str_to_geom_type = {
+        "box": mujoco.mjtGeom.mjGEOM_BOX,
+        "ellipsoid": mujoco.mjtGeom.mjGEOM_ELLIPSOID,
+        "mesh": mujoco.mjtGeom.mjGEOM_MESH,
+        "capsule": mujoco.mjtGeom.mjGEOM_CAPSULE,
+        "cylinder": mujoco.mjtGeom.mjGEOM_CYLINDER,
+        "plane": mujoco.mjtGeom.mjGEOM_PLANE,
+        "sphere": mujoco.mjtGeom.mjGEOM_SPHERE,
+    }
+    return str_to_geom_type[type_name]
 
 
-def reload_model_with_assets(model):
-    try:
-        return mujoco.MjModel.from_xml_string(model.to_xml_string(), model.get_assets())
-    except ValueError as ex:
-        logger.error("Unable to reload model: %s", model, exc_info=ex)
-        return model
+def load_and_clean_spec(blueprint: RobotDescriptionModel):
+    spec = load_spec_from_blueprint(blueprint)
+    remove_invalid_joints(spec)
+    load_assets_into_spec(spec, blueprint)
+
+    spec = mujoco.MjSpec.from_string(spec.to_xml(), assets=spec.assets)
+    return spec
 
 
-def load_model_from_path(path_name, escape_separators=False):
-    try:
-        return mjcf.from_path(path_name, escape_separators)
-    except Exception as ex:  # (FileNotFoundError, AttributeError, ValueError) as ex:
-        logger.error("Unable to load model from path %s", path_name, exc_info=ex)
-        return DUMMY_MODEL
+def load_assets_into_spec(spec: mujoco.MjSpec, blueprint: RobotDescriptionModel):
+    model_path = get_robot_descriptions_model_path(blueprint)
+    asset_dir = Path(model_path).parent / spec.meshdir
+
+    for mesh in spec.meshes:
+        if mesh.file and mesh.file not in spec.assets:
+            p = asset_dir / mesh.file
+            spec.assets[mesh.file] = p.read_bytes()
+
+    # TODO use sepc.texturedir
+    for texture in spec.textures:
+        if texture.file and texture.file not in spec.assets:
+            p = asset_dir / texture.file
+            spec.assets[texture.file] = p.read_bytes()
 
 
-def load_model_from_blueprint(blueprint: RobotDescriptionModel):
-    logger.info("Loading model %s", blueprint)
-    model = load_model_from_robot_descriptions(
-        blueprint.description_name, blueprint.variant_name
-    )
-    if blueprint.model_prefix_name:
-        model.namescope.name = blueprint.model_prefix_name
-    logger.info("Namescope is %s", model.namescope.name)
-    return model
+def get_robot_descriptions_model_path(blueprint: RobotDescriptionModel) -> str:
+    description_name = blueprint.description_name
+    variant_name = blueprint.variant_name
 
-
-def load_model_from_robot_descriptions(
-    description_name: str, variant_name: Optional[str] = None
-):
-    """
-    Loads a mujoco model from robot_description package
-
-    :param description_name: the name of the description package
-    :param variant_name: the name of the variant. Usually hand.xml
-    """
     module = import_module(f"robot_descriptions.{description_name}")
     model_path = module.MJCF_PATH
     if variant_name:
         model_path = os.path.join(os.path.dirname(model_path), variant_name)
     logger.debug("Model path is %s", model_path)
-    return load_model_from_path(model_path, True)
+
+    return model_path
 
 
-def remove_invalid_joints(model):
-    for j in model.find_all("joint"):
-        # or j.name == "floating_base_joint" or j.name == "freejoint" or
-        if j.name is None or is_freejoint(j):
+def load_spec_from_blueprint(blueprint: RobotDescriptionModel):
+    logger.info("Loading model %s", blueprint)
+
+    model_path = get_robot_descriptions_model_path(blueprint)
+
+    if blueprint.model_prefix_name:
+        logger.warning("Not implemented yet.")
+
+    return mujoco.MjSpec.from_file(model_path)
+
+
+def load_model_from_path(path_name, escape_separators=False):
+    try:
+        spec = mujoco.MjSpec.from_file(path_name)
+        if escape_separators:
+            spec = fix_element_names(spec)
+        return spec.compile()
+    except Exception as ex:  # (FileNotFoundError, AttributeError, ValueError) as ex:
+        logger.error("Unable to load model from path %s", path_name, exc_info=ex)
+        return mujoco.MjSpec.from_string(DUMMY_MODEL_STR)
+
+
+def fix_element_names(spec: mujoco.MjSpec) -> mujoco.MjSpec:
+    def remove_invalid_chars(s: str) -> str:
+        s = s.replace(" ", "_")
+        s = s.replace("//", "_")
+        return s
+
+    for obj_list in [
+        spec.bodies,
+        spec.geoms,
+        spec.joints,
+        spec.sites,
+        spec.cameras,
+        spec.lights,
+        spec.meshes,
+        spec.materials,
+        spec.sensors,
+        # spec.excludes,
+        # spec.equalities,
+        # spec.tendons,
+        # spec.actuators
+    ]:
+        for obj in obj_list:
+            if obj.name:
+                obj.name = remove_invalid_chars(obj.name)
+            if hasattr(obj, "material") and obj.material is not None:
+                obj.material = remove_invalid_chars(obj.material)
+            if hasattr(obj, "meshname") and obj.meshname is not None:
+                obj.meshname = remove_invalid_chars(obj.meshname)
+    return spec
+
+
+def remove_invalid_joints(spec):
+    for j in spec.joints:
+        if is_freejoint(j):  # j.name is None or
             logger.warning("Removing joint %s. Parent is %s", j.name, j.parent)
-            for k in model.find_all("key"):
-                k.qpos = k.qpos[7:]
-            j.remove()
+            spec.delete(j)
+            for k in spec.keys:
+                k.qpos = np.asarray(k.qpos)[7:]
+            spec.compile()
 
 
-def has_freejoint(element: mjcf.Element) -> bool:
-    for j in element.find_all("joint", immediate_children_only=True):
+def has_freejoint(element: mujoco.MjsElement) -> bool:
+    for j in element.joints:
         if is_freejoint(j):
             return True
     return False
 
 
-def is_freejoint(j: mjcf.Element) -> bool:
-    if getattr(j, "tag", None) == "freejoint" or getattr(j, "type", None) == "free":
-        return True
-    return False
+def is_freejoint(j: mujoco._specs.MjsJoint) -> bool:
+    return j.type == mujoco.mjtJoint.mjJNT_FREE
 
 
-def merge_home_keys(arm_model, gripper_model):
-    # merges the home key of the arm and the gripper
-    # see `https://github.com/google-deepmind/mujoco_menagerie/blob/main/FAQ.md`
-    arm_key = arm_model.find("key", "home")
-    if arm_key:
-        gripper_key = gripper_model.find("key", "home")
-        if gripper_key is None:
-            physics = mjcf.Physics.from_mjcf_model(gripper_model)
-            arm_key.ctrl = np.concatenate([arm_key.ctrl, np.zeros(physics.model.nu)])
-            arm_key.qpos = np.concatenate([arm_key.qpos, np.zeros(physics.model.nq)])
-        else:
-            arm_key.ctrl = np.concatenate([arm_key.ctrl, gripper_key.ctrl])
-            arm_key.qpos = np.concatenate([arm_key.qpos, gripper_key.qpos])
-            gripper_key.remove()
-    else:
-        logger.warning("No home key found.")
+def update_home_joint_position(spec, new_joint_position: Sequence[float]) -> None:
 
+    k = spec.key("home")
+    if not k:
+        logger.warning("Model does not have a home key. Manually adding one")
+        model = spec.compile()
+        k = spec.add_key(name="home", qpos=np.zeros(model.nq), ctrl=np.zeros(model.nu))
 
-def ensure_existing_home_key(model):
-    for k in model.find_all("key"):
-        if hasattr(k, "name") and k.name == "home":
-            return model
-    logger.warning("Unable to find a home key for model %s. Manually adding one", model)
-    # this might fail, e.g. for panda_nohand.xml
-    physics = mjcf.Physics.from_mjcf_model(model)
-    k = model.keyframe.add("key", name="home")
-    k.ctrl = np.zeros(physics.model.nu)
-    k.qpos = np.zeros(physics.model.nq)
-    return model
-
-
-def remove_non_home_key(model):
-    for k in model.find_all("key"):
-        if not hasattr(k, "name") or k.name is None:
-            logger.warning("Removing invalid key. Reason key has no name")
-            k.remove()
-        elif k.name != "home":
-            logger.warning("Removing non home key with name %s", k.name)
-            k.remove()
-    return model
-
-
-def update_joint_position(model, new_joint_position: Sequence[float]):
     q_len = len(new_joint_position)
-    for k in model.find_all("key"):
-        max_len = min(len(k.ctrl), q_len)
-        if len(k.ctrl) != q_len:
-            logger.error(
-                "Key %s has invalid length. Expected %d, but key has %d values.",
-                k,
-                q_len,
-                len(k.ctrl),
-            )
-            logger.error("model is %s", model)
-            # continue
-        k.qpos[:max_len] = np.asarray(new_joint_position)[:max_len]
-        k.ctrl[:max_len] = np.asarray(new_joint_position)[:max_len]
+    qpos = np.asarray(k.qpos)
+    ctrl = np.asarray(k.ctrl)
+
+    if len(qpos) != q_len:
+        logger.error(
+            "Key %s has invalid length. Expected %d, but key has %d values.",
+            k.name,
+            q_len,
+            len(qpos),
+        )
+    max_len = min(len(k.ctrl), q_len)
+    # FIXME this is actually not correct as we need the mapping between actuators and joints
+    qpos[:max_len] = np.asarray(new_joint_position)[:max_len]
+    ctrl[:max_len] = np.asarray(new_joint_position)[:max_len]
+
+    k.qpos = qpos
+    k.ctrl = ctrl
+
+    spec.compile()
 
 
-def set_pose(element: mjcf.Element, pose: Optional[Pose] = None):
+def set_pose(element: mujoco.MjsFrame, pose: Optional[Pose] = None):
     """
     .. seealso:: :func:`add_offset_pose`
     """
     if pose is None:
         return
 
-    if (
-        element.quat is not None
-        or element.euler is not None
-        or element.axisangle is not None
-    ):
+    if not np.allclose(element.quat, [1, 0, 0, 0], rtol=0.0):
         logger.warning(
             "Element orientation already set for element %s. Overwriting previous orientation",
             element,
         )
-        element.quat = None
-        element.axisangle = None
-        element.euler = None
-    if hasattr(element, "pos") and element.pos is not None:
+    if not np.allclose(element.pos, [0, 0, 0], rtol=0.0):
         logger.warning(
             "Element position already set for element %s. Overwriting previous position.",
             element,
@@ -195,49 +223,39 @@ def set_pose(element: mjcf.Element, pose: Optional[Pose] = None):
     element.quat = pose.quaternion_wxyz
 
 
-def add_offset_pose(element: mjcf.Element, offset: Optional[Pose] = None):
+def add_offset_pose(element: mujoco.MjsFrame, offset: Optional[Pose] = None):
     if offset is None:
         return
 
     prev_pose = pose_from_element(element)
     new_pose = Pose(prev_pose.matrix.dot(offset.matrix))
-    element.quat = None
-    element.axisangle = None
-    element.euler = None
     element.pos = new_pose.position
     element.quat = new_pose.quaternion_wxyz
 
 
-def pose_from_element(element: mjcf.Element, use_degrees: bool = True) -> Pose:
-    pose = Pose()
-    if hasattr(element, "pos") and element.pos is not None:
-        pose = pose.with_position(element.pos)
-    if hasattr(element, "quat") and element.quat is not None:
-        pose = pose.with_quat_wxyz(element.quat)
-    elif hasattr(element, "xyaxes") and element.xyaxes is not None:
-        x = element.xyaxes[:3]
-        y = element.xyaxes[3:]
-        x = x / np.linalg.norm(x)
-        y = y / np.linalg.norm(y)
-        m = np.identity(4)
-        m[:3, 0] = x
-        m[:3, 1] = y
-        m[:3, 2] = np.cross(x, y)
-        if abs(np.linalg.det(m) - 1.0) > 1e-3:
-            logger.warning("Not a rotation matrix %s. Det is %f", m, np.linalg.det(m))
-            u, _s, vt = np.linalg.svd(m[:3, :3], full_matrices=True)
-            m[:3, :3] = u.dot(vt)
-            if np.linalg.det(m) < 1e-3:
-                u[:, -1] *= -1.0
-                m[:3, :3] = u.dot(vt)
-            logger.info("New rotation matrix is %s", m)
-        pose = Pose(m).with_position(pose.position)
-    elif hasattr(element, "euler") and element.euler is not None:
+def pose_from_element(
+    element: mujoco.MjsElement, compiler: mujoco.MjsCompiler = None
+) -> Pose:
+
+
+    if element.alt.type != mujoco.mjtOrientation.mjORIENTATION_QUAT:
         logger.warning(
-            "Not fully implemented. Check if there is a compile flag that specifies the units. Something like # <compiler angle=degree ..."
+            "Not fully supported yet. Element %s has %s ",
+            element.name,
+            element.alt.type,
         )
-        pose = pose.with_euler(element.euler, degrees=use_degrees)
-    return pose
+
+        spec = mujoco.MjSpec()
+        compiler = spec.compiler
+
+        quat_wxyz = mujoco.MjSpec.resolve_orientation(
+            degree=compiler.degree,
+            sequence=compiler.eulerseq,
+            orientation=element.alt,
+        )
+    else:
+        quat_wxyz = element.quat
+    return Pose().with_position(element.pos).with_quat_wxyz(quat_wxyz)
 
 
 def set_object_pose(data: mujoco.MjData, object_name: str, pose: Pose, relative=False):
@@ -257,11 +275,8 @@ def set_object_pose(data: mujoco.MjData, object_name: str, pose: Pose, relative=
         data.qpos[qpos_adr : qpos_adr + 7] = pose_vec
 
 
-def get_home_key_qpos(root: mjcf.RootElement) -> List[float]:
-    if not hasattr(root, "keyframe"):
-        logger.warning("Unable to find a home keyframe.")
-        return []
-    for key in root.keyframe.find_all("key"):
-        if key.name == "home":
-            return key.ctrl.tolist()
+def get_home_key_qpos(spec: mujoco.MjSpec) -> List[float]:
+    k = spec.key("home")
+    if k:
+        return list(k.ctrl)
     return []

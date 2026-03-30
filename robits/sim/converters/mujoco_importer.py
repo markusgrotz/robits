@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from dm_control import mjcf
+import mujoco
 
 from robits.sim.blueprints import Blueprint
 from robits.sim.blueprints import GeomBlueprint
@@ -24,8 +24,8 @@ from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import BlueprintGroup
 
-from robits.sim import mjcf_utils
 from robits.utils import camera_intrinsics
+from robits.sim import mjcf_utils
 
 from robits.sim.converters.robot_heuristics import get_all_heuristics_classes
 from robits.sim.converters.gripper_heuristics import get_all_gripper_heuristics_classes
@@ -33,7 +33,6 @@ from robits.sim.converters.gripper_heuristics import get_all_gripper_heuristics_
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_RGBA = (1, 0.5, 1, 1.0)
 FREE_JOINT_LEN = 7
 
 
@@ -55,16 +54,21 @@ def _join_full_name(parent: Optional[str], child: str) -> str:
     return _normalize_full_name(combined)
 
 
-def load_mjcf_as_blueprints(xml_path: Union[str, Path]) -> List[Blueprint]:
-    return MujocoXMLImporter(xml_path).parse()
+def load_mjcf_as_blueprints(model_path: Union[str, Path]) -> List[Blueprint]:
+    return MujocoXMLImporter(model_path).parse()
 
 
 class MujocoXMLImporter:
-    def __init__(self, xml_path: Union[str, Path]) -> None:
-        xml_path = Path(xml_path).expanduser().resolve()
+    def __init__(self, model_path: Union[str, Path]) -> None:
+        model_path = Path(model_path).expanduser().resolve()
 
-        self.asset_dir = xml_path.parent
-        self.model = mjcf.from_path(str(xml_path), escape_separators=True)
+        self.spec = mujoco.MjSpec.from_file(str(model_path))
+        self.asset_dir = model_path.parent / self.spec.meshdir
+
+        # TODO recompile so that we get rid of euler and other tags, such as fromto
+        self.spec = mujoco.MjSpec.from_string(
+            self.spec.to_xml(), assets=self.spec.assets
+        )
 
         logger.info("Using heuristic to detect a robot. This is not fully implemented.")
         self.robot_heuristic_classes = get_all_heuristics_classes()
@@ -72,42 +76,46 @@ class MujocoXMLImporter:
 
         self.seq = 0
 
-        self.use_degrees = getattr(self.model.compiler, "angle", "radian") == "degree"
+    def get_top_level_parent(
+        self, element: mujoco.MjsElement
+    ) -> Optional[mujoco.MjsElement]:
 
-    def get_top_level_parent(self, element: mjcf.Element) -> Optional[mjcf.Element]:
+        if element is self.spec.worldbody:
+            return None
+
         current = element
         while current.parent:
-            if current.parent is self.model.worldbody:
+            if current.parent is self.spec.worldbody:
                 return current
             current = current.parent
         return None
 
     def parse(self) -> List[Blueprint]:
-        model = self.model
 
-        joint_positions = mjcf_utils.get_home_key_qpos(model)
+        joint_positions = mjcf_utils.get_home_key_qpos(self.spec)
 
         blueprints = []
-        for element_tags in model.find_all("camera"):
+        for element_tags in self.spec.cameras:
             blueprints.append(self.parse_camera_tag(element_tags))
 
-        all_body_elements: List[mjcf.Element] = [model.worldbody]
-        all_body_elements.extend(model.find_all("body", immediate_children_only=False))
-
+        all_body_elements: List[mujoco.MjsElement] = [self.spec.worldbody]
         visited_body_elements = set()
 
         # Track hierarchical full names for each body to support nested groups.
-        body_to_fullname: Dict[mjcf.Element, Optional[str]] = {model.worldbody: None}
-        free_joint_body_elements: List[mjcf.Element] = []
+        body_to_fullname: Dict[mujoco.MjsElement, Optional[str]] = {
+            self.spec.worldbody: None
+        }
+        free_joint_body_elements: List[mujoco.MjsElement] = []
 
         for body_element in all_body_elements:
             if body_element in visited_body_elements:
-                logger.info("element already visited: %s", body_element)
+                logger.info("element already visited: %s", body_element.name)
                 continue
             else:
                 visited_body_elements.add(body_element)
+                all_body_elements.extend(body_element.bodies)
 
-            pose = mjcf_utils.pose_from_element(body_element, self.use_degrees)
+            pose = mjcf_utils.pose_from_element(body_element)
             if mjcf_utils.has_freejoint(body_element):  # we have a top level element
                 is_static = False
                 free_joint_body_elements.append(body_element)
@@ -115,7 +123,8 @@ class MujocoXMLImporter:
                     # keyframe_pose = pose_from_home_key(joint_positions[:FREE_JOINT_LEN])
                     # we need to include the joint position pose into the current pose as the blueprint does not cover this concept
                     # pose = Pose(pose.matrix.dot(keyframe_pose.matrix))
-                    joint_positions = joint_positions[FREE_JOINT_LEN:]
+                    # joint_positions = joint_positions[FREE_JOINT_LEN:]
+                    pass
             else:
                 # we need to do it here.
                 top_level_parent = self.get_top_level_parent(body_element)
@@ -143,7 +152,7 @@ class MujocoXMLImporter:
                 bp = replace(bp, path=_normalize_full_name(bp.path))
                 blueprints.append(bp)
             else:
-                if body_element != model.worldbody:
+                if body_element != self.spec.worldbody:
                     name = getattr(
                         body_element, "name", f"body_{len(visited_body_elements)}"
                     )
@@ -152,12 +161,11 @@ class MujocoXMLImporter:
                     body_to_fullname[body_element] = group_name
                     blueprints.append(BlueprintGroup(group_name, pose=pose))
 
-                logger.info("Parsing geom/mesh tags")
-
-                for geom in body_element.find_all("geom", immediate_children_only=True):
-                    logger.info("Parsing %s", geom)
-                    geom_bp = self.parse_geom_tag(geom, is_static, self.asset_dir)
-                    if geom_bp:
+                for geom in body_element.geoms:
+                    logger.debug(
+                        "Parsing geom tag %s of %s", geom.name, body_element.name
+                    )
+                    if geom_bp := self.parse_geom_tag(geom, is_static):
                         parent_name = body_to_fullname.get(body_element, None)
                         full_name = _join_full_name(parent_name, geom_bp.path)
                         geom_bp = replace(geom_bp, path=full_name)
@@ -165,7 +173,7 @@ class MujocoXMLImporter:
 
         return blueprints
 
-    def parse_camera_tag(self, element: mjcf.Element) -> CameraBlueprint:
+    def parse_camera_tag(self, element: mujoco.MjsElement) -> CameraBlueprint:
         name = getattr(element, "name", None)
 
         if name is None:
@@ -186,31 +194,54 @@ class MujocoXMLImporter:
             intrinsics = np.array(
                 [[385.0, 0.0, 320.0], [0.0, 385.0, 240.0], [0.0, 0.0, 1.0]]
             )
-        pose = mjcf_utils.pose_from_element(element, self.use_degrees)
+        pose = mjcf_utils.pose_from_element(element)
         return CameraBlueprint(name, width, height, intrinsics, pose)
 
+    def _mujoco_geom_type_to_str(self, geom_type: int) -> str:
+        geom_type_to_str = {
+            mujoco.mjtGeom.mjGEOM_BOX: "box",
+            mujoco.mjtGeom.mjGEOM_ELLIPSOID: "ellipsoid",
+            mujoco.mjtGeom.mjGEOM_MESH: "mesh",
+            mujoco.mjtGeom.mjGEOM_CAPSULE: "capsule",
+            mujoco.mjtGeom.mjGEOM_CYLINDER: "cylinder",
+            mujoco.mjtGeom.mjGEOM_PLANE: "plane",
+            mujoco.mjtGeom.mjGEOM_SPHERE: "sphere",
+        }
+        return geom_type_to_str[geom_type]
+
     def parse_geom_tag(
-        self, geom: mjcf.Element, is_static: bool, asset_dir: Path
-    ) -> Union[GeomBlueprint, MeshBlueprint]:
-        if geom.name is None:
+        self,
+        geom: mujoco.MjsElement,
+        is_static: bool,
+    ) -> Optional[Union[GeomBlueprint, MeshBlueprint]]:
+
+        if not geom.name:
             name = f"geom_{geom.type}_{self.seq}"
             self.seq += 1
         else:
             name = f"{geom.name}"
 
-        geom_type = geom.type
-        pose = mjcf_utils.pose_from_element(geom, self.use_degrees)
-        mass = geom.mass or 0.0
+        spec = self.spec
+        asset_dir = self.asset_dir
+
+        if not asset_dir.is_dir():
+            logger.warning("Asset dir is not a folder or does not exist.")
+
+        geom_type = self._mujoco_geom_type_to_str(geom.type)
+        pose = mjcf_utils.pose_from_element(geom)
+        mass = geom.mass
 
         if geom_type == "mesh":
-            scale = getattr(geom, "scale", 1.0)
-            mesh_path = geom.mesh.file.get_vfs_filename(False)
-            if asset_dir.is_dir():
-                mesh_path = asset_dir / mesh_path
-            else:
-                logger.warning("Asset dir is not a folder or does not exist.")
+            mesh = spec.mesh(geom.meshname)
 
-            logger.debug("Mesh path: %s, mesh: %s", mesh_path, geom.mesh)
+            if mesh.scale[0] != mesh.scale[1] or mesh.scale[0] != mesh.scale[2]:
+                logger.warning("Different scale is not supported")
+
+            scale = mesh.scale[0]
+
+            mesh_path = str(asset_dir / mesh.file)
+
+            logger.debug("Mesh path: %s, mesh: %s", mesh_path, geom.meshname)
             logger.warning("Not fully implemented yet.")
             if not Path(mesh_path).is_file():
                 logger.warning("Mesh path does not exist.")
@@ -227,19 +258,9 @@ class MujocoXMLImporter:
         ):
             logger.debug("Geom: %s", geom)
 
-            if geom.size is not None:
-                size = geom.size.tolist() * 3
-                size = size[:3]
-            else:
-                logger.warning("No size information.")
-                size = [0, 0, 0]
+            size = geom.size.tolist()
 
-            if geom.rgba is not None:
-                rgba = geom.rgba.tolist()
-            else:
-                rgba = DEFAULT_RGBA
-
-            if hasattr(geom, "fromto") and geom.fromto is not None:
+            if not np.isnan(geom.fromto[0]):
                 from_point, to_point = geom.fromto[:3], geom.fromto[3:]
                 mid_vec = (to_point - from_point) / 2.0
                 mid_point = from_point + mid_vec
@@ -248,29 +269,30 @@ class MujocoXMLImporter:
                 m[:3, 3] = mid_point
                 pose = Pose(pose.matrix.dot(m))
                 extend = np.linalg.norm(mid_vec)
-                size[1] = extend
+                size[1] = float(extend)
+
+            rgba = geom.rgba.tolist()
 
             logger.debug("Size: %s, RGBA: %s", size, rgba)
             return GeomBlueprint(name, geom_type, pose, size, rgba, is_static, mass)
         else:
             logger.error("Unable to parse %s", geom)
+            return None
 
     def extract_gripper_bp(
         self,
-        element: mjcf.Element,
+        element: mujoco.MjsElement,
         joint_positions: List[float],
     ) -> Optional[Tuple[Attachment, GripperBlueprint]]:
         logger.warning("Gripper parsing is not fully implemented yet.")
-
         for heuristic in self.gripper_heuristic_classes:
             if (h := heuristic(element, joint_positions)) and h.search():
                 return h.to_blueprint()
 
     def extract_robot_bp(
-        self, element: mjcf.Element, joint_positions: List[float]
+        self, element: mujoco.MjsElement, joint_positions: List[float]
     ) -> Optional[RobotBlueprint]:
-        name = getattr(element, "name", None)
-        if not name:
+        if not element.name:
             return None
         for heuristic in self.robot_heuristic_classes:
             if (h := heuristic(element, joint_positions)) and h.search():
