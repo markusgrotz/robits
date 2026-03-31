@@ -56,8 +56,12 @@ class MujocoEnv:
             self.render_cameras(renderer)
 
         self.joint_id_to_actuator_id = self.get_joint_to_actuator_mapping(self.model)
-
+        self.viewer = None
         threading.Thread(target=self.sim_control_loop, daemon=True).start()
+
+        while not self.viewer or not self.viewer.is_running():
+            logger.debug("Waiting for viewer to launch.")
+            time.sleep(0.2)
 
     def get_joint_to_actuator_mapping(self, model: mujoco.MjModel) -> Dict[int, int]:
         """

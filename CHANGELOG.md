@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming - 
 
+## [0.9.0] - 2026-03-31
+
+- Add busy waiting while mujoco viewer is launching
+- Update gripper configs
 - Move model_factory and utils to robits.sim.scene package
 - Replace dm-control package with mujoco.MjSpec
 
