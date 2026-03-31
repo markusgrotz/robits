@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix normalization for gripper joint positions
 - Reduce tolerance when checking rotation matrix determinant
 
 ## [0.8.2] - 2026-03-20
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remote robots now support grippers and cameras
 
 ## [0.8.1] - 2026-02-09
+
 - Parse mass property for geom tags when importing MuJoCo XML files
 - Parse degree option when importing MuJoCo XML files
 - Fix DEFAULT_FREE_JOINT_QPOS handling in model_factory module

@@ -85,7 +85,7 @@ class MujocoJointControlClient(MujocoEnvClient):
     @lru_cache(1)
     def qpos_indices(self) -> np.ndarray:
         """
-        :returns: the qpos indicies for each actuated joints
+        :returns: the qpos joint indicies
         """
         return np.array(
             [self.model.jnt_qposadr[i] for i in self.joint_ids],
@@ -121,9 +121,19 @@ class MujocoJointControlClient(MujocoEnvClient):
         """
         return self.model.actuator_ctrlrange[self.actuator_ids][:, 1]
 
+    @property
+    @lru_cache(1)
+    def qpos_min(self) -> np.ndarray:
+        return self.model.jnt_range[self.joint_ids][:, 0]
+
+    @property
+    @lru_cache(1)
+    def qpos_max(self) -> np.ndarray:
+        return self.model.jnt_range[self.joint_ids][:, 1]
+
     def get_current_joint_positions(self) -> np.ndarray:
         """
-        Removes the free joints from the model.
+        Only lists joints that are specified in joint_names
 
         :returns: A numpy array of the current joint positions
         """

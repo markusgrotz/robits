@@ -59,7 +59,12 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
 
     def get_obs(self) -> Dict[str, Any]:
         qpos = self.data.qpos[self.qpos_indices].copy()
-        qpos_normalized = self._normalize(qpos)
+
+        if self.invert:
+            qpos_normalized = 1.0 - self._normalize_qpos(qpos)
+        else:
+            qpos_normalized = self._normalize_qpos(qpos)
+
         return {
             "finger_positions": qpos_normalized,
             "joint_positions_raw": qpos,
@@ -69,18 +74,21 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
     def is_open(self) -> bool:
         return bool(self.get_obs()["finger_positions"][0] > 0.5)
 
-    def _normalize(self, qpos):
-        return (qpos - self.ctrl_min) / (self.ctrl_max - self.ctrl_min)
+    def _normalize_qpos(self, qpos):
+        return (qpos - self.qpos_min) / (self.qpos_max - self.qpos_min)
 
-    def _unnormalize(self, qpos):
-        return qpos * (self.ctrl_max - self.ctrl_min) + self.ctrl_min
+    def _normalize_ctrl(self, ctrl):
+        return (ctrl - self.ctrl_min) / (self.ctrl_max - self.ctrl_min)
+
+    def _unnormalize_ctrl(self, ctrl):
+        return ctrl * (self.ctrl_max - self.ctrl_min) + self.ctrl_min
 
     def set_pos(self, pos):
         if self.invert:
-            qpos = self._unnormalize(1.0 - pos)
+            target = self._unnormalize_ctrl(1.0 - pos)
         else:
-            qpos = self._unnormalize(pos)
-        self.data.ctrl[self.actuator_ids] = qpos
+            target = self._unnormalize_ctrl(pos)
+        self.data.ctrl[self.actuator_ids] = target
 
     def get_info(self):
         return {
