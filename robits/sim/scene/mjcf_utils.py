@@ -237,7 +237,6 @@ def pose_from_element(
     element: mujoco.MjsElement, compiler: mujoco.MjsCompiler = None
 ) -> Pose:
 
-
     if element.alt.type != mujoco.mjtOrientation.mjORIENTATION_QUAT:
         logger.warning(
             "Not fully supported yet. Element %s has %s ",

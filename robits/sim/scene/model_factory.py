@@ -295,7 +295,6 @@ class SceneBuilder:
             robot_spec, frame=robot_mount, prefix=f"{blueprint.basename}/"
         )
 
-
         mjcf_utils.add_offset_pose(robot_frame, blueprint.pose)
 
         self.spec.compile()
