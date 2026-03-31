@@ -72,7 +72,8 @@ class MujocoGripper(MujocoJointControlClient, GripperBase):
         }
 
     def is_open(self) -> bool:
-        return bool(self.get_obs()["finger_positions"][0] > 0.5)
+        qpos = np.asarray(self.get_obs()["finger_positions"])
+        return bool(qpos.size > 0 and np.all(qpos > 0.5))
 
     def _normalize_qpos(self, qpos):
         return (qpos - self.qpos_min) / (self.qpos_max - self.qpos_min)
