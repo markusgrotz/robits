@@ -1,0 +1,4 @@
+{
+    "name": "pocket_tts",
+    "class_path": "robits.audio.pocket_tts.PocketTTS"
+}

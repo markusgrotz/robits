@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add pocket TTS
 - Include all gripper joints for sim.gripper.is_open 
 - Fix normalization for gripper joint positions
 - Reduce tolerance when checking rotation matrix determinant
