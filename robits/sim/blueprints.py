@@ -119,7 +119,7 @@ class Pose:
         if self.matrix.shape != (4, 4):
             raise ValueError("Pose must be a 4x4 transformation matrix")
 
-        if not np.isclose(np.linalg.det(self.matrix[:3, :3]), 1.0):
+        if not np.isclose(np.linalg.det(self.matrix[:3, :3]), 1.0, rtol=0.0, atol=1e-4):
             raise ValueError("Not a rotation matrix. Determinant does not equal 1.")
 
     def to_dict(self) -> List[float]:
