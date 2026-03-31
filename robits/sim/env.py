@@ -41,9 +41,9 @@ class MujocoEnv:
 
         logger.info("Model timestep is %s", self.model.opt.timestep)
 
-        logger.info("Resetting to first keyframe")
-
-        mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
+        logger.info("Resetting to home keyframe")
+        key_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_KEY, "home")
+        mujoco.mj_resetDataKeyframe(self.model, self.data, key_id)
         mujoco.mj_forward(self.model, self.data)
 
         self.last_step = 0.0
