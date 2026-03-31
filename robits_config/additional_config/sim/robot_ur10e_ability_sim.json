@@ -1,0 +1,24 @@
+{
+    "robot_name": "ur10e",
+    "class_path": "robits.sim.robot.MujocoRobot",
+    "joint_names": [
+        "ur10e/shoulder_pan_joint",
+        "ur10e/shoulder_lift_joint",
+        "ur10e/elbow_joint",
+        "ur10e/wrist_1_joint",
+        "ur10e/wrist_2_joint",
+        "ur10e/wrist_3_joint"
+    ],
+    "gripper": "gripper_ability_hand_sim",
+    "camera": "camera_front_sim",
+    "default_joint_positions": [
+        0.0,
+        -1.57,
+        1.57,
+        -1.57,
+        -1.57,
+       0.0
+    ],    
+    "description_name": "ur10e_mj_description",
+    "wrist_name": "wrist_3_link"
+}

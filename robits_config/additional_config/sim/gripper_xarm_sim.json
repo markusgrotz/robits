@@ -1,11 +1,8 @@
 {
     "gripper_name": "xarm",
     "class_path": "robits.sim.gripper.MujocoGripper",
-    "actuator_names": [
-        "xarm7 hand/fingers_actuator"
-    ],
     "joint_names": [
-        "xarm7 hand/left_finger_joint"
+        "xarm/left_driver_joint"
     ],
 
     "description_name": "xarm7_mj_description",

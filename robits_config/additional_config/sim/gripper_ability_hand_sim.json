@@ -1,0 +1,19 @@
+{
+    "gripper_name": "ability_hand",
+    "class_path": "robits.sim.gripper.MujocoGripper",
+    "description_name": "ability_hand_mj_description",
+    "variant_name": "./hands/abh_right_large.xml",
+    "invert": true,
+    "joint_names": [
+        "ability_hand/index_mcp",
+        "ability_hand/index_pip",
+        "ability_hand/middle_mcp",
+        "ability_hand/middle_pip",
+        "ability_hand/ring_mcp",
+        "ability_hand/ring_pip",
+        "ability_hand/pinky_mcp",
+        "ability_hand/pinky_pip",
+        "ability_hand/thumb_mcp",
+        "ability_hand/thumb_cmc"
+    ]
+}

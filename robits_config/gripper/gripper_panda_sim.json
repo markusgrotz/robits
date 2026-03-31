@@ -1,9 +1,6 @@
 {
     "gripper_name": "panda hand",
     "class_path": "robits.sim.gripper.MujocoGripper",
-    "actuator_names": [
-        "panda hand/actuator8"
-    ],
     "joint_names": [
         "panda hand/finger_joint1"
     ],

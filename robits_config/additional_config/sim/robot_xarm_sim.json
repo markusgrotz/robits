@@ -46,5 +46,5 @@
         ]
     ],
     "description_name": "xarm7_mj_description",
-    "wrist_name": "xarm_gripper_base_link"
+    "variant_name": "xarm7_nohand.xml"
 }
