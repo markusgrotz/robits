@@ -8,7 +8,7 @@ import mujoco
 from robits.sim.blueprints import RobotBlueprint
 from robits.sim.blueprints import RobotDescriptionModel
 
-from robits.sim import mjcf_utils
+from robits.sim.scene import mjcf_utils
 
 
 class RobotHeuristic(ABC):

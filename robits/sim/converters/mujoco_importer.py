@@ -25,7 +25,7 @@ from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import BlueprintGroup
 
 from robits.utils import camera_intrinsics
-from robits.sim import mjcf_utils
+from robits.sim.scene import mjcf_utils
 
 from robits.sim.converters.robot_heuristics import get_all_heuristics_classes
 from robits.sim.converters.gripper_heuristics import get_all_gripper_heuristics_classes

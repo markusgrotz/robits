@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 from robits.sim.blueprints import Blueprint
-from robits.sim.model_factory import SceneBuilder
+from robits.sim.scene.model_factory import SceneBuilder
 
 logger = logging.getLogger(__name__)
 

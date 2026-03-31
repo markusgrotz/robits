@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming - 
 
+- Move model_factory and utils to robits.sim.scene package
 - Replace dm-control package with mujoco.MjSpec
 
 ## [0.8.3] - 2026-03-31

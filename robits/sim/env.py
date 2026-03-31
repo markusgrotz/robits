@@ -17,7 +17,7 @@ import mujoco
 import mujoco.viewer
 
 from robits.sim.env_design import env_designer
-from robits.sim.model_factory import SceneBuilder
+from robits.sim.scene.model_factory import SceneBuilder
 
 logger = logging.getLogger(__name__)
 

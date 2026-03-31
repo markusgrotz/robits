@@ -26,7 +26,7 @@ from robits.sim.blueprints import GripperBlueprint
 from robits.sim.blueprints import CameraBlueprint
 from robits.sim.blueprints import BlueprintGroup
 
-from robits.sim import mjcf_utils as mjcf_utils
+from robits.sim.scene import mjcf_utils as mjcf_utils
 
 logger = logging.getLogger(__name__)
 
