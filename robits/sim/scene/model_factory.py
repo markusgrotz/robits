@@ -320,8 +320,9 @@ class SceneBuilder:
 
         attachment_site = arm_model.site(attachment_blueprint.attachment_site)
         if attachment_site is None:
-            logger.error("Unable to find an attachment site. Unable to attach gripper.")
-            return arm_model
+            logger.error("Unable to find  attachment site. Using last body to attach gripper.")
+            body = arm_model.bodies[-1]
+            attachment_site = body.add_site(name=attachment_blueprint.attachment_site)
 
         frame = arm_model.attach(
             gripper_spec, site=attachment_site, prefix=f"{gripper_blueprint.basename}/"
