@@ -1,1 +1,1 @@
-dependencies = ["mujoco", "dm_control"]
+dependencies = ["mujoco", "robot-descriptions"]
