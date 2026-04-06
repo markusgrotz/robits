@@ -1,16 +1,88 @@
 from typing import Callable
+from typing import Optional
 
+import os
+import sys
 import time
 import json
 
 import importlib
 import logging
 
+from pathlib import Path
+
+from functools import lru_cache
 from functools import wraps
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
+@lru_cache()
+def has_executable(executeable_name: str) -> bool:
+    """
+    Heuristic to check for a executeble
+
+    PATH might change during runtime and file might not have the +x flag.
+    """
+    for p in os.environ.get("PATH", "/bin").split(os.pathsep):
+        if (Path(p) / executeable_name).is_file():
+            return True
+    return False
+
+
+@lru_cache()
+def has_dependency(dependency_name: str) -> bool:
+    """
+    Heuristic to check for a installed Python dependency
+
+    Does not work for builtin modules and single-file modules.
+    Also we can only check for the top-level package.
+    """
+    for p in sys.path:
+        base_path = Path(p)
+        if base_path.is_dir() and (base_path / dependency_name).is_dir():
+            return True
+    return False
+
+
+def requires_executable(executeable_name: str, msg: Optional[str] = None):
+
+    def decorator(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+
+            if not has_executable(executeable_name):
+                error_msg = (
+                    msg or f"Unable to find executable {executeable_name} in $PATH."
+                )
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def requires_dependency(dependency_name: str, msg: Optional[str] = None):
+
+    def decorator(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+
+            if not has_dependency(dependency_name):
+                error_msg = msg or f"Unable to find dependency {dependency_name}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def check_bounds():
