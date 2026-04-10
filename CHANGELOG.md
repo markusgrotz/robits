@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming - 
 
+- Add version constraint for pyrobotiqgripper dependency
 - Update dependencies: bump robot-description version, remove dm-control
 - Add decorators for dependency checking to robits.core.utils
 - Create missing site if not found in robot model
