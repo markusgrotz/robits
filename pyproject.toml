@@ -110,10 +110,6 @@ tracker = "https://github.com/markusgrotz/robits/issues"
 requires = ["uv_build>=0.9.4,<0.10.0"]
 build-backend = "uv_build"
 
-[tool.uv.build-backend]
-module-name = ["robits", "robits_config"]
-module-root = ""
-
 [project.scripts]
 rb = 'robits.cli.main:cli'
 panda = 'robits.cli.devices.panda_cli:panda'
