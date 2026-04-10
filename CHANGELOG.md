@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming - 
 
+- Update dependencies: bump robot-description version, remove dm-control
+- Add decorators for dependency checking to robits.core.utils
+- Create missing site if not found in robot model
+
 ## [0.9.0] - 2026-03-31
 
 - Add busy waiting while mujoco viewer is launching
